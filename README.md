@@ -54,7 +54,7 @@ python scripts/demo.py
 ```
 [2/4] data processing + factor engine ...
       candle features : 29 columns
-      factors computed: 5 -> rsi_14, macd_hist, bollinger_pctb, rolling_vol_ratio, basis_z_score
+      factors computed: 5 -> rsi_14, macd_hist, bollinger_pctb, rolling_vol_ratio, net_taker_flow
 [3/4] loading MoE experts ...
       experts loaded  : ['hunter', 'sniper', 'defender']
 [4/4] inference:
@@ -127,12 +127,14 @@ python scripts/benchmark.py               # or --candles 5000 --iters 100000
 
 ## Running the full system
 
-The live pipeline needs OKX API credentials and is intended for Apple Silicon
-(the orchestrator pins P-/E-cores). Each stage is also runnable standalone.
+The pipeline is intended for Apple Silicon (the orchestrator pins P-/E-cores).
+Each stage is also runnable standalone.
+
+**No API credentials are required.** Market data comes from OKX's public and
+business WebSocket channels, which are unauthenticated, and the pipeline stops
+at simulated fills — see [Execution is simulated](#execution-is-simulated).
 
 ```bash
-cp .env.example .env && source .env        # add your OKX_API_KEY / OKX_SECRET / OKX_PASSWORD
-
 python -m orchestrator.main                # supervised: spawns every stage
 # — or run stages individually —
 python -m io_gateway.main                  # OKX ingest → shared memory + WAL
@@ -147,6 +149,35 @@ Retrain the expert models at any time:
 python -m quant_core.training.train_models  # writes data/models/{hunter,sniper,defender}/
 ```
 
+## Research on real data
+
+The demo and the shipped models both run on *synthetic* candles. To work with
+real history instead, pull it from OKX's public REST endpoints (no key needed)
+and measure whether the factors actually predict anything once fees are taken
+out:
+
+```bash
+python scripts/fetch_history.py --days 365 --with-spot   # -> data/history/
+python scripts/factor_research.py                        # IC / IR / layered returns
+```
+
+`fetch_history.py` keeps only closed candles (OKX marks an unfinished bar with
+`confirm="0"`; training on one is a look-ahead bug) and prints the return
+distribution against round-trip cost. `factor_research.py` reports each
+factor's information coefficient, its stability, the factor correlation matrix,
+and the long-short spread net of fees, across several bar sizes and holding
+horizons. Entry is delayed one bar throughout: a factor computed from bar `t`'s
+close cannot be filled at that same close.
+
+**Findings are written up in [`docs/factor-research.md`](docs/factor-research.md).**
+The short version, over a year of real 1m data: for 81.5% of minutes the entire
+bar range is smaller than the 10 bp round-trip fee, and across 36 factor ×
+horizon combinations none reaches `|t| > 2`, let alone survives correcting for
+the number of tests. The factor set also turns out to hold about four
+independent ideas rather than nine — `rsi_14` and `bollinger_pctb` correlate at
+0.90. **This project has no demonstrated trading edge**, and the report explains
+why that is structural rather than a matter of model capacity.
+
 ## Project layout
 
 ```
@@ -158,7 +189,8 @@ orchestrator/    process supervisor, CPU affinity, disaster recovery
 dashboard/       Streamlit monitoring app
 utils/           logging, health monitor, performance, recovery helpers
 config/          settings (flat constants) + trading_config (dataclasses)
-scripts/         demo.py (offline pipeline) + benchmark.py (hot-path timings)
+scripts/         demo.py (offline pipeline), benchmark.py (hot-path timings),
+                 fetch_history.py (real OKX history), factor_research.py (IC study)
 tests/           pytest suites (factors, ring buffer, data processor, MoE)
 ```
 
@@ -176,14 +208,26 @@ This is a learning project, not a production trading system. What that means:
 
 - **The models are trained on *synthetic* data** ([`quant_core/training/train_models.py`](quant_core/training/train_models.py)).
   The demo showcases the factor → scaling → MoE → signal *pipeline*, not a
-  profitable edge. Don't read alpha into the numbers.
+  profitable edge. Don't read alpha into the numbers. The labels there are
+  random draws with three hand-written patterns injected to make them
+  learnable, so the three experts can only recover those three rules.
+- **No edge has been demonstrated on real data.** A year of OKX history says
+  the factors do not beat fees at any tested horizon —
+  [`docs/factor-research.md`](docs/factor-research.md) has the measurements
+  and the method.
 - **Single symbol.** Everything is wired for `DOGE-USDT-SWAP`; multi-symbol
   support would need per-symbol shared-memory segments.
 - **Some factors need live feeds.** The funding-rate, open-interest, and
   order-flow factors require data the offline demo doesn't have, so they're
   skipped there; only the candle-derived factors compute.
-- **Not battle-tested with real capital.** Treat the live path as a reference
-  implementation, not something to point at your account.
+- **Execution is simulated.** <a name="execution-is-simulated"></a>The chain
+  runs market data -> factors -> MoE -> fusion -> risk -> order *sizing*, and
+  then stops. [`execution/order_router.py`](execution/order_router.py) fills
+  orders against the last tick with a modelled slippage curve; it never calls
+  the exchange. There is no REST client, no request signing, and no private
+  WebSocket channel, so nothing here can place an order even if you supply
+  credentials. The `api_client` constructor argument is an unused placeholder
+  for that adapter.
 
 ## Disclaimer
 

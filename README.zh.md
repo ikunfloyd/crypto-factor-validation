@@ -44,7 +44,7 @@ python scripts/demo.py
 
 ```
 [2/4] data processing + factor engine ...
-      factors computed: 5 -> rsi_14, macd_hist, bollinger_pctb, rolling_vol_ratio, basis_z_score
+      factors computed: 5 -> rsi_14, macd_hist, bollinger_pctb, rolling_vol_ratio, net_taker_flow
 [4/4] inference:
   regime          : high_vol
   fused score     : +0.267   ->  NEUTRAL   confidence 0.0%
@@ -102,12 +102,12 @@ python scripts/benchmark.py               # 或 --candles 5000 --iters 100000
 
 ## 运行完整系统
 
-实盘链路需要 OKX API 凭证，且面向 Apple Silicon（主控进程会绑定 P/E 核）。
-每个阶段也可单独运行。
+本链路面向 Apple Silicon（主控进程会绑定 P/E 核），每个阶段也可单独运行。
+
+**无需任何 API 凭证。** 行情来自 OKX 的 public / business 公开 WebSocket 频道
+（免鉴权），而链路止步于模拟成交 —— 见[执行层是模拟的](#执行层是模拟的)。
 
 ```bash
-cp .env.example .env && source .env        # 填入 OKX_API_KEY / OKX_SECRET / OKX_PASSWORD
-
 python -m orchestrator.main                # 受管：拉起所有阶段
 # —— 或单独运行各阶段 ——
 python -m io_gateway.main                  # OKX 采集 → 共享内存 + WAL
@@ -122,6 +122,29 @@ streamlit run dashboard/main.py            # 监控界面
 python -m quant_core.training.train_models  # 输出到 data/models/{hunter,sniper,defender}/
 ```
 
+## 在真实数据上做研究
+
+demo 和随附模型都跑在**合成**K线上。要换成真实历史数据，先从 OKX 的公开 REST
+接口拉取（无需密钥），再检验因子在扣除手续费之后是否还有预测力：
+
+```bash
+python scripts/fetch_history.py --days 365 --with-spot   # -> data/history/
+python scripts/factor_research.py                        # IC / IR / 分层收益
+```
+
+`fetch_history.py` 只保留已收盘的K线（OKX 用 `confirm="0"` 标记未完结的K线，
+拿它训练就是前视偏差），并打印收益率分布与来回成本的对比。
+`factor_research.py` 输出每个因子的信息系数、稳定性、因子相关性矩阵，以及扣费
+后的多空收益差，覆盖多个K线周期和持仓期。全程延迟一根K线入场：用第 t 根收盘价
+算出的因子，不可能在同一根的收盘价上成交。
+
+**研究结论见 [`docs/factor-research.md`](docs/factor-research.md)。**
+在一年真实1分钟数据上的简短版本：81.5% 的分钟里，整根K线的全部振幅都小于
+10bp 的来回手续费；36 个「因子 × 持仓期」组合中没有一个达到 `|t| > 2`，
+更不用说通过多重检验校正。因子集实际上只包含约四个独立想法而非九个 ——
+`rsi_14` 与 `bollinger_pctb` 的秩相关高达 0.90。**本项目尚未验证出任何交易
+优势**，报告解释了为什么这是结构性的，而非模型容量不足。
+
 ## 测试
 
 ```bash
@@ -135,12 +158,21 @@ pytest                                    # 配置见 pytest.ini
 
 - **模型基于合成数据训练**（[`quant_core/training/train_models.py`](quant_core/training/train_models.py)）。
   demo 展示的是「因子 → 标准化 → MoE → 信号」这套**工程管道**，不是可盈利的策略，
-  请勿把其中数字当作 alpha。
+  请勿把其中数字当作 alpha。其标签由随机数生成，再人为注入三条规则使其可学习，
+  因此三个专家能学到的只有这三条规则。
+- **未在真实数据上验证出优势**。一年的 OKX 历史数据显示，这些因子在所有测试过的
+  持仓周期上都无法覆盖手续费 —— 测量过程与方法见
+  [`docs/factor-research.md`](docs/factor-research.md)。
 - **单交易对**。目前一切都围绕 `DOGE-USDT-SWAP`；多交易对需要为每个标的
   分配独立的共享内存段。
 - **部分因子需要实时数据**。资金费率、持仓量、订单流相关因子依赖离线 demo 拿不到
   的数据源，因此在 demo 中被跳过，只计算 K 线派生因子。
-- **未经实盘充分验证**。请把实盘链路视为参考实现，而非可直接对接账户的成品。
+- <a name="执行层是模拟的"></a>**执行层是模拟的**。整条链路跑完
+  行情 → 因子 → MoE → 融合 → 风控 → 下单**数量计算**之后就停止了。
+  [`execution/order_router.py`](execution/order_router.py) 按最新 tick 加一条
+  滑点曲线撮合出成交结果，从不调用交易所。项目里没有 REST 客户端、没有请求
+  签名、也没有私有 WebSocket 频道，因此即便填入凭证也无法下单。
+  `api_client` 这个构造参数是留给该适配器的占位，目前未被使用。
 
 ## 免责声明
 
