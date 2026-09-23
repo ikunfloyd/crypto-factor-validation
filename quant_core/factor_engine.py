@@ -306,106 +306,231 @@ class FactorEngine:
     
     # ==================== B组：资金与博弈因子 ====================
     
+    @staticmethod
+    def _asof_backward(target_ts: np.ndarray, source_ts: np.ndarray,
+                       source_val: np.ndarray) -> np.ndarray:
+        """
+        把低频序列对齐到高频时间轴，只允许向后看（as-of backward）。
+
+        对每个 target_ts[i]，取 source 中**不晚于**它的最近一个观测。找不到
+        （target 早于所有 source）时填 NaN。
+
+        这一步必须按时间戳做，不能按数组下标配对：两个序列的起点和采样频率
+        通常不同，按下标对齐会把几小时之后的观测配到当前 K 线上，产生随机的
+        前视偏差 —— 回测赚钱、实盘归零的典型原因。
+        """
+        n = len(target_ts)
+        out = np.full(n, np.nan)
+        if len(source_ts) == 0:
+            return out
+
+        # side='right' - 1 给出最后一个 <= target 的位置；-1 表示无可用历史
+        idx = np.searchsorted(source_ts, target_ts, side='right') - 1
+        valid = idx >= 0
+        out[valid] = source_val[idx[valid]]
+        return out
+
     def calculate_basis_z_score(self, data: Dict[str, Any], 
                                lookback: int = 1440) -> Optional[pl.Series]:  # 24小时
-        """计算基差Z-Score"""
+        """
+        计算永续-现货基差的滚动Z-Score。
+
+        基差 = (永续价 - 现货价) / 现货价，反映合约相对现货的升贴水，是永续
+        市场多空拥挤度的直接度量。需要现货K线（data['spot_candles']）；缺失
+        时返回 None 而不是退化成常数，避免给模型喂一个零信息量的特征。
+
+        用 scripts/fetch_history.py --with-spot 拉取现货腿。
+        """
         try:
-            # 在实际系统中，需要永续合约价格和现货价格
-            # 这里使用简化版本：假设永续价格在candles中，现货价格用close近似
             candles = data.get('candles')
+            spot = data.get('spot_candles')
+
             if candles is None or len(candles) < lookback:
                 return None
-            
-            # 假设永续价格就是close（在实际中需要获取永续合约和现货的价差）
-            perp_price = candles['close'].to_numpy()
-            spot_price = perp_price  # 简化：假设现货价格相同
-            
-            # 计算基差
-            basis = (perp_price - spot_price) / spot_price
-            
-            # 计算Z-Score
+
+            if spot is None or len(spot) == 0:
+                logger.warning(
+                    "basis_z_score: 缺少现货数据(spot_candles)，跳过该因子。"
+                    "用 scripts/fetch_history.py --with-spot 拉取现货K线。"
+                )
+                return None
+
+            if 'timestamp' not in candles.columns or 'timestamp' not in spot.columns:
+                logger.warning("basis_z_score: 缺少 timestamp 列，无法按时间对齐")
+                return None
+
+            perp_ts = candles['timestamp'].to_numpy().astype(np.float64)
+            perp_price = candles['close'].to_numpy().astype(np.float64)
+            spot_ts = spot['timestamp'].to_numpy().astype(np.float64)
+            spot_close = spot['close'].to_numpy().astype(np.float64)
+
+            # 现货按时间戳对齐到永续的时间轴（只向后看）
+            spot_price = self._asof_backward(perp_ts, spot_ts, spot_close)
+
+            with np.errstate(divide='ignore', invalid='ignore'):
+                basis = np.where(spot_price > 0,
+                                 (perp_price - spot_price) / spot_price,
+                                 np.nan)
+
+            covered = int(np.isfinite(basis).sum())
+            if covered < lookback:
+                logger.warning(
+                    f"basis_z_score: 现货覆盖不足({covered} < {lookback})，跳过该因子"
+                )
+                return None
+
             n = len(basis)
             basis_z = np.full(n, np.nan)
-            
-            for i in range(lookback-1, n):
-                window = basis[i-lookback+1:i+1]
-                mean = np.mean(window)
-                std = np.std(window)
-                
+
+            for i in range(lookback - 1, n):
+                window = basis[i - lookback + 1:i + 1]
+                if not np.isfinite(basis[i]):
+                    continue
+
+                mean = np.nanmean(window)
+                std = np.nanstd(window)
+
+                # std==0 意味着窗口内基差没有任何变化（基本只会出现在数据异常
+                # 的情况下）。此时Z-Score无定义，留 NaN 让下游知道这里没信息，
+                # 而不是填 0 假装因子是中性的。
                 if std > 0:
                     basis_z[i] = (basis[i] - mean) / std
-                else:
-                    basis_z[i] = 0
-            
+
             return pl.Series('basis_z_score', basis_z)
         except Exception as e:
             logger.error(f"Error calculating basis Z-score: {e}")
             return None
     
     def calculate_oi_change_rate(self, data: Dict[str, Any]) -> Optional[pl.Series]:
-        """计算持仓量变化率（单位成交带来的持仓变化）"""
+        """
+        计算持仓量变化率（单位成交带来的持仓变化）。
+
+        OI上升伴随大成交 = 新仓在建（趋势可能延续）；OI下降伴随大成交 = 平仓
+        了结（趋势可能衰竭）。除以成交量是为了让不同活跃度的时段可比。
+
+        OI序列通常比K线低频（OKX的统计口径是5m），因此按时间戳做 as-of
+        backward 对齐，保证每根K线只用到该时刻已经发生的OI观测。
+        """
         try:
             candles = data.get('candles')
             oi_data = data.get('open_interest')
-            
-            if candles is None or oi_data is None:
+
+            if candles is None or oi_data is None or len(candles) < 2:
                 return None
-            
-            # 对齐时间戳（简化处理）
-            oi_values = oi_data['oi'].to_numpy()
-            volume = candles['volume'].to_numpy()
-            
-            n = min(len(oi_values), len(volume))
-            if n < 2:
+
+            if 'timestamp' not in candles.columns or 'timestamp' not in oi_data.columns:
+                logger.warning("oi_change_rate: 缺少 timestamp 列，无法按时间对齐")
                 return None
-            
+
+            candle_ts = candles['timestamp'].to_numpy().astype(np.float64)
+            volume = candles['volume'].to_numpy().astype(np.float64)
+            oi_ts = oi_data['timestamp'].to_numpy().astype(np.float64)
+            oi_values = oi_data['oi'].to_numpy().astype(np.float64)
+
+            # 对齐到K线时间轴：每根K线取当时最新的OI读数
+            oi_aligned = self._asof_backward(candle_ts, oi_ts, oi_values)
+
+            n = len(candle_ts)
             oi_change_rate = np.full(n, np.nan)
-            
+
             for i in range(1, n):
-                oi_change = oi_values[i] - oi_values[i-1]
+                prev_oi, cur_oi = oi_aligned[i - 1], oi_aligned[i]
+                if not (np.isfinite(prev_oi) and np.isfinite(cur_oi)):
+                    continue
                 if volume[i] > 0:
-                    oi_change_rate[i] = oi_change / volume[i]
-            
-            return pl.Series('oi_change_rate', oi_change_rate[:len(candles)])
+                    oi_change_rate[i] = (cur_oi - prev_oi) / volume[i]
+
+            covered = int(np.isfinite(oi_change_rate).sum())
+            if covered == 0:
+                logger.warning("oi_change_rate: OI与K线时间范围无重叠，跳过该因子")
+                return None
+
+            return pl.Series('oi_change_rate', oi_change_rate)
         except Exception as e:
             logger.error(f"Error calculating OI change rate: {e}")
             return None
     
     def calculate_net_taker_flow(self, data: Dict[str, Any], 
                                 lookback: int = 60) -> Optional[pl.Series]:
-        """计算主动买卖净流量"""
+        """
+        计算主动买卖净流量（成交量加权）。
+
+        有逐笔成交数据（data['trades'] 带 side 字段）时用真实的主动买卖方向；
+        没有时退化为 Chaikin Money Flow 式的估计：用收盘价在当根K线区间内的
+        相对位置 CLV = ((close-low) - (high-close)) / (high-low) 作为买卖压力
+        的代理，再按成交量加权。收盘贴近最高价说明买方吃掉了卖单，反之亦然。
+
+        原实现用 sign(close[i] - close[i-1]) 当作主动买卖方向，有两个问题：
+          1. 那是K线**之间**的收益率符号，与"主动成交方向"无关；
+          2. 它与收益率严格共线。一旦标签定义稍有偏移（例如误用当期收益而非
+             前向收益），模型会直接抄答案，回测夏普虚高、实盘归零 —— 这是
+             量化回测最经典的失败模式。
+        CLV 用的是K线**内部**的 OHLC 相对位置，不是相邻K线的收益，因此不存在
+        这个共线性。
+        """
         try:
-            trades = data.get('trades')
-            if trades is None or len(trades) < lookback:
-                return None
-            
-            # 在实际系统中，需要解析trades数据
-            # 这里使用简化版本
             candles = data.get('candles')
-            if candles is None:
+            if candles is None or len(candles) < lookback:
                 return None
-            
-            # 模拟主动买卖流（在实际中需要从tick数据计算）
-            close_prices = candles['close'].to_numpy()
-            n = len(close_prices)
-            
-            # 使用价格变化作为主动买卖的代理
-            net_flow = np.zeros(n)
-            for i in range(1, n):
-                if close_prices[i] > close_prices[i-1]:
-                    net_flow[i] = 1  # 主动买入
-                elif close_prices[i] < close_prices[i-1]:
-                    net_flow[i] = -1  # 主动卖出
-            
-            # 计算滚动平均值
+
+            trades = data.get('trades')
+            n = len(candles)
+
+            if trades is not None and len(trades) > 0 and 'side' in getattr(trades, 'columns', []):
+                # 真实逐笔：买方主动为 +size，卖方主动为 -size，按K线时间桶汇总
+                signed = self._signed_trade_volume(candles, trades)
+                if signed is None:
+                    return None
+                flow, weight = signed
+            else:
+                high = candles['high'].to_numpy().astype(np.float64)
+                low = candles['low'].to_numpy().astype(np.float64)
+                close = candles['close'].to_numpy().astype(np.float64)
+                volume = candles['volume'].to_numpy().astype(np.float64)
+
+                rng = high - low
+                with np.errstate(divide='ignore', invalid='ignore'):
+                    clv = np.where(rng > 0, ((close - low) - (high - close)) / rng, 0.0)
+
+                flow = clv * volume
+                weight = volume
+
+            # 滚动的净流量占总成交量之比，范围约在 [-1, 1]
             net_taker_flow = np.full(n, np.nan)
-            for i in range(lookback-1, n):
-                window = net_flow[i-lookback+1:i+1]
-                net_taker_flow[i] = np.mean(window)
-            
+            for i in range(lookback - 1, n):
+                w = weight[i - lookback + 1:i + 1].sum()
+                if w > 0:
+                    net_taker_flow[i] = flow[i - lookback + 1:i + 1].sum() / w
+
             return pl.Series('net_taker_flow', net_taker_flow)
         except Exception as e:
             logger.error(f"Error calculating net taker flow: {e}")
+            return None
+
+    def _signed_trade_volume(self, candles, trades):
+        """把逐笔成交按 side 聚合到K线时间桶，返回 (净流量, 总量) 两个数组。"""
+        try:
+            if 'timestamp' not in candles.columns or 'timestamp' not in trades.columns:
+                return None
+
+            candle_ts = candles['timestamp'].to_numpy().astype(np.float64)
+            trade_ts = trades['timestamp'].to_numpy().astype(np.float64)
+            size = trades['size'].to_numpy().astype(np.float64)
+            side = trades['side'].to_numpy()
+
+            sign = np.where(side == 'buy', 1.0, -1.0)
+
+            # 每笔成交归入不晚于它的那根K线
+            idx = np.searchsorted(candle_ts, trade_ts, side='right') - 1
+            valid = idx >= 0
+
+            flow = np.zeros(len(candle_ts))
+            weight = np.zeros(len(candle_ts))
+            np.add.at(flow, idx[valid], (sign * size)[valid])
+            np.add.at(weight, idx[valid], size[valid])
+            return flow, weight
+        except Exception as e:
+            logger.error(f"Error aggregating signed trade volume: {e}")
             return None
     
     # ==================== C组：风险特征因子 ====================
@@ -451,30 +576,63 @@ class FactorEngine:
             logger.error(f"Error calculating downside beta: {e}")
             return None
     
-    def calculate_funding_cost_pressure(self, data: Dict[str, Any]) -> Optional[pl.Series]:
-        """计算资金费率压力值"""
+    def calculate_funding_cost_pressure(self, data: Dict[str, Any],
+                                        lookback: int = 90) -> Optional[pl.Series]:
+        """
+        计算资金费率压力：当前资金费率相对其近期分布的Z-Score。
+
+        资金费率为正且处于历史高位，说明多头拥挤、持多仓要持续付费，是反转
+        风险的前兆；负值极端则相反。用Z-Score而不是原始费率，是因为费率的
+        绝对水平会随市场周期漂移，只有"相对自身历史有多极端"才可比。
+
+        两个此前的实现问题已修正：
+          1. 原先按数组下标截断，资金费率每8小时才一个点，长度远短于K线，
+             整个因子会因长度不匹配被 calculate_all_factors 丢弃 —— 也就是说
+             它从未真正进入过模型。现按时间戳 as-of backward 对齐。
+          2. 原先把费率乘以常数8.0 当作"压力"。对树模型而言 x 与 8x 完全
+             等价（分裂点随之缩放），该变换不产生任何新信息。
+
+        Args:
+            lookback: Z-Score的回看窗口，单位是资金费率结算次数（8小时一次，
+                      默认90次约等于30天）。
+        """
         try:
             candles = data.get('candles')
             funding_rates = data.get('funding_rates')
-            
-            if candles is None or funding_rates is None:
+
+            if candles is None or funding_rates is None or len(funding_rates) == 0:
                 return None
-            
-            # 对齐数据（简化处理）
-            funding_rate_values = funding_rates['rate'].to_numpy()
-            
-            # 预测持仓时间（简化：假设持仓时间为8小时）
-            predicted_hold_time = 8.0
-            
-            # 计算资金费率压力
-            n = min(len(funding_rate_values), len(candles))
-            funding_pressure = np.full(n, np.nan)
-            
-            for i in range(n):
-                # 资金费率压力 = 资金费率 × 预测持仓时间
-                funding_pressure[i] = funding_rate_values[i] * predicted_hold_time
-            
-            return pl.Series('funding_cost_pressure', funding_pressure[:len(candles)])
+
+            if 'timestamp' not in candles.columns or 'timestamp' not in funding_rates.columns:
+                logger.warning("funding_cost_pressure: 缺少 timestamp 列，无法按时间对齐")
+                return None
+
+            fr_ts = funding_rates['timestamp'].to_numpy().astype(np.float64)
+            fr_rate = funding_rates['rate'].to_numpy().astype(np.float64)
+
+            # 先在资金费率自己的时间轴上算滚动Z-Score，再对齐到K线。
+            # 顺序不能反：在K线时间轴上算会因为同一个费率被重复上百次而
+            # 严重低估标准差。
+            m = len(fr_rate)
+            fr_z = np.full(m, np.nan)
+            for i in range(m):
+                start = max(0, i - lookback + 1)
+                window = fr_rate[start:i + 1]
+                if len(window) < min(10, lookback):
+                    continue
+                mean, std = np.mean(window), np.std(window)
+                if std > 0:
+                    fr_z[i] = (fr_rate[i] - mean) / std
+
+            candle_ts = candles['timestamp'].to_numpy().astype(np.float64)
+            pressure = self._asof_backward(candle_ts, fr_ts, fr_z)
+
+            covered = int(np.isfinite(pressure).sum())
+            if covered == 0:
+                logger.warning("funding_cost_pressure: 资金费率与K线时间范围无重叠，跳过该因子")
+                return None
+
+            return pl.Series('funding_cost_pressure', pressure)
         except Exception as e:
             logger.error(f"Error calculating funding cost pressure: {e}")
             return None
