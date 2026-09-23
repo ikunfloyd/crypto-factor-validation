@@ -49,6 +49,9 @@ data/models/
 data/wal/
 data/replay/
 data/backups/
+# fetched market history — regenerate with scripts/fetch_history.py, don't commit
+# (a year of 1m candles is tens of MB and is reproducible from the exchange)
+data/history/
 data/*.csv
 data/*.pkl
 data/.shutdown_marker
