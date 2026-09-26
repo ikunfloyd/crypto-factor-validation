@@ -3,8 +3,7 @@
 > An event-driven, multi-process high-frequency trading engine for the OKX
 > DOGE-USDT perpetual swap, built as a systems-engineering study on Apple Silicon.
 
-<!-- Replace OWNER with your GitHub username once pushed. -->
-[![CI](https://github.com/OWNER/doge_usdt_trading/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/doge_usdt_trading/actions/workflows/ci.yml)
+[![CI](https://github.com/ikunfloyd/doge-usdt-trading/actions/workflows/ci.yml/badge.svg)](https://github.com/ikunfloyd/doge-usdt-trading/actions/workflows/ci.yml)
 [![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS%20(Apple%20Silicon)-lightgrey.svg)](https://www.apple.com/mac/)
