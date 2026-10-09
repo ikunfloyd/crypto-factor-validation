@@ -292,19 +292,17 @@ st.markdown("""
 
 #### 技术栈
 - **数据处理**: Polars, PyArrow
-- **机器学习**: PyTorch, XGBoost
+- **机器学习**: LightGBM
 - **可视化**: Streamlit, Plotly
 - **进程通信**: 共享内存, Ring Buffer
 - **日志**: Loguru
 
-#### 联系方式
-- 📧 Email: support@example.com
-- 📚 文档: https://docs.example.com
-- 🐛 Bug报告: https://github.com/example/issues
+#### 项目
+- 🐛 Issues: https://github.com/ikunfloyd/crypto-factor-validation/issues
 
 ---
 
-© 2026 Quant Trading Team. All rights reserved.
+MIT License — 见仓库根目录 LICENSE
 """)
 
 # 页脚
