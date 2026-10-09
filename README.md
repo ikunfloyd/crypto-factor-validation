@@ -201,6 +201,8 @@ pytest                                    # config in pytest.ini
 pytest tests/test_ring_buffer.py -v       # a single suite
 ```
 
+The invariants a change must not break are in [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Honest status
 
 This is a learning project, not a production trading system. What that means:

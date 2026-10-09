@@ -838,7 +838,7 @@ def calculate_rsi_numba(prices, period=14):
 ```
 
 **优化建议**:
-- 使用`fastmath=True`（牺牲极小精度换速度）
+- `fastmath=True` 只用于不检查 NaN 的核函数：开启后 Numba 可能假定不存在 NaN，直接删掉 `np.isnan` 判断（见 [CONTRIBUTING.md](CONTRIBUTING.md)）
 - 避免Python对象（使用纯NumPy数组）
 - 提前编译（第一次调用时缓存）
 
@@ -967,9 +967,9 @@ graph TD
 ### 8.1 如何添加新因子
 
 ```python
-# 1. 定义Numba加速函数
+# 1. 定义Numba加速函数（需要判断 NaN 时不要开 fastmath，见 CONTRIBUTING.md）
 @staticmethod
-@jit(nopython=True, fastmath=True)
+@jit(nopython=True)
 def _calculate_my_factor(prices: np.ndarray) -> np.ndarray:
     # 计算逻辑
     return result

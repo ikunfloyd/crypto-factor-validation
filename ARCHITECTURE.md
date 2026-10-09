@@ -114,9 +114,11 @@ signals per regime — that routing is the point of the design.
 
 > **Feature-list contract.** Training and inference share one 17-feature list in
 > the same order ([`train_models.py`](quant_core/training/train_models.py) and
-> [`model_inference.py`](quant_core/model_inference.py)). If they drift, every
-> `predict` raises a dimension error and silently returns 0.0 — a bug that once
-> made the MoE emit constant signals. Change both together, then retrain.
+> [`model_inference.py`](quant_core/model_inference.py)). If the counts drift,
+> every `predict` raises a dimension error and silently returns 0.0 — a bug that
+> once made the MoE emit constant signals. If only the order or a name drifts,
+> nothing raises and the experts score the wrong columns. Change both together,
+> then retrain.
 
 > **On the models.** They are trained on *synthetic* data as a pipeline
 > demonstration, not a profitable strategy. `data/models/` is generated (and

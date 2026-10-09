@@ -153,6 +153,8 @@ pip install -r requirements-dev.txt
 pytest                                    # 配置见 pytest.ini
 ```
 
+改动时不能破坏的约束见 [CONTRIBUTING.md](CONTRIBUTING.md)（英文）。
+
 ## 项目真实状态
 
 这是一个学习项目，不是生产级交易系统。具体来说：
