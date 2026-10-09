@@ -391,8 +391,8 @@ PAGE_CONFIG = {
     'layout': 'wide',
     'initial_sidebar_state': 'expanded',
     'menu_items': {
-        'Get Help': 'https://github.com/yourusername/doge_usdt_trading',
-        'Report a bug': 'https://github.com/yourusername/doge_usdt_trading/issues',
+        'Get Help': 'https://github.com/ikunfloyd/crypto-factor-validation',
+        'Report a bug': 'https://github.com/ikunfloyd/crypto-factor-validation/issues',
         'About': '# DOGE-USDT 高频量化交易系统\n\n实时监控仪表板 v1.0.0'
     }
 }

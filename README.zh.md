@@ -3,7 +3,7 @@
 > 面向 OKX DOGE-USDT 永续合约的事件驱动、多进程高频交易引擎，
 > 一个在 Apple Silicon 上进行的系统工程实践。
 
-[![CI](https://github.com/ikunfloyd/doge-usdt-trading/actions/workflows/ci.yml/badge.svg)](https://github.com/ikunfloyd/doge-usdt-trading/actions/workflows/ci.yml)
+[![CI](https://github.com/ikunfloyd/crypto-factor-validation/actions/workflows/ci.yml/badge.svg)](https://github.com/ikunfloyd/crypto-factor-validation/actions/workflows/ci.yml)
 [![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS%20(Apple%20Silicon)-lightgrey.svg)](https://www.apple.com/mac/)
