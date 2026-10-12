@@ -225,8 +225,8 @@ when to stop cannot become a degree of freedom.
   - Archive files are listed for every month the sets need (§3). If a set's funding is
     nonetheless unavailable, its `funding_cost_pressure` cells are untestable there (§6.8).
   - Any settlement spacing other than 8 h is reported. On a bar whose start is 8 h or more after
-    the latest settlement at or before it (or the manifest's spacing, if that differs),
-    `funding_cost_pressure` is undefined. The research pipeline applies this mask to the output
+    the latest settlement at or before it, `funding_cost_pressure` is undefined. The limit is a
+    fixed 8 h, the regular interval, so no bar's mask depends on later settlements. The research pipeline applies this mask to the output
     of `calculate_funding_cost_pressure`, which is not changed.
 - **No interpolation.** A resampled bar is kept only if all its 1-minute bars exist. Forward returns
   that span a missing bar are undefined (§6.3).
@@ -257,6 +257,15 @@ For the seven existing factors, "code" means the functions in `quant_core/factor
 they stand in the commit that contains this document. A test checks that they, and the helpers
 they call (`_calculate_rsi_numba`, `_calculate_ema_numba`, `_asof_backward`), are unchanged at the
 freeze tag. Any change is a deviation (§12).
+
+Where an unchanged function's output at a bar depends on later bars, the research pipeline keeps a
+value only if the function, run on the data up to that bar, would produce it. Two cases exist, both
+inside the warm-up:
+
+- `calculate_macd_hist` defines index slow + signal − 2 only when at least slow + signal bars
+  exist;
+- `calculate_basis_z_score` returns nothing unless the whole series has ≥ 1440 finite basis
+  values.
 
 ### 5.1 Existing factors
 
@@ -414,7 +423,8 @@ the regular B-grid of the evaluation window, with z_t = 0 for dropped buckets an
   Ω = Σ_{k = −ℓ..ℓ} Σ_t z_t z_{t+k}, with lag ℓ = h − 1 (uniform weights)
 
 Then SE = √Ω / |A|, t_HH = μ̂ / SE, and the one-sided p = 1 − Φ(t_HH). If Ω ≤ 0, Bartlett weights
-with ℓ = 2h are used instead, and the fallback is flagged.
+with ℓ = 2h are used instead, and the fallback is flagged. If SE = 0, t_HH is undefined and the
+cell's p is 1.
 
 The lag ℓ = h − 1 covers exactly the overlap between forward-return windows. In synthetic
 simulations, with iid, persistent and heavy-tailed cases, one-sided 5% rejection rates were
@@ -474,16 +484,16 @@ are listed in §10.
 
 | | |
 |---|---|
-| R1 | **Circular-shift placebo.** G is the evaluation window's grid of N_G bar positions. The offsets are δ_j = D_30 + round(j·(N_G − 2·D_30)/(K − 1)), for j = 0 … K−1, with K = 2000 and D_30 = 30 days in bars. Duplicates are dropped, leaving K′. For each δ_j, s is rotated within G (s′_t = s_{(t−δ_j) mod N_G}), and A, n_t and t_HH are recomputed with the same d and c. Per-cell p = (1 + #{t_j ≥ t_HH}) / (1 + K′). Family-wise p = (1 + #{max over testable cells of t_j ≥ t_HH}) / (1 + K′), with the same offset for every cell. Both test "no association between signal and returns", not E[n] ≤ 0, and neither enters Holm. |
+| R1 | **Circular-shift placebo.** G is the evaluation window's grid of N_G bar positions. The offsets are δ_j = D_30 + round(j·(N_G − 2·D_30)/(K − 1)), for j = 0 … K−1, with K = 2000 and D_30 = 30 days in bars. Duplicates are dropped, leaving K′. For each δ_j, s is rotated within G (s′_t = s_{(t−δ_j) mod N_G}), and A, n_t and t_HH are recomputed with the same d and c. Per-cell p = (1 + #{t_j ≥ t_HH}) / (1 + K′), using that cell's own t_HH. Family-wise p = (1 + #{max over testable cells of t_j ≥ t_HH}) / (1 + K′), with the same offset index j for every cell; an index is kept only if its offset is new on both bar grids. A rotated cell is evaluated even if it has fewer than 300 active bars. Both test "no association between signal and returns", not E[n] ≤ 0, and neither enters Holm. |
 | R2 | **v1's statistic.** `_spread_t_stat`, as in the commit containing this document: a gross top-minus-bottom two-sample t on quintile edges computed over the whole evaluation window, ÷ √h, not multiplied by d. Kept for continuity. |
 | R3 | **μ̂ by quarter.** Four blocks, split at 20:00 UTC on 2023-12-23, 2024-03-23 and 2024-06-23. Trades are assigned by the start of bar t. |
-| R4 | **Leave out the k most volatile UTC days**, k ∈ {0, 5, 10}. Days are ranked by the sum of squared simple 1-minute DOGE returns within the window. A trade is dropped if its holding interval (close of t+1 to close of t+1+h) overlaps one of those days. |
-| R5 | **Turnover-aware P&L.** The position after the close of bar u is p_u = (1/h) Σ_{j=1..h} d·s_{u−j}, with s = 0 where unassigned, so each signal is held from the close of t+1 to the close of t+1+h. It earns p_u·r_{u+1} and pays c/2 per unit of \|p_u − p_{u−1}\|. Reported as net return per day. |
+| R4 | **Leave out the k most volatile UTC days**, k ∈ {0, 5, 10}. Days are ranked by the sum of squared simple 1-minute DOGE returns within the window. A 1-minute return belongs to the UTC day of its later minute. A trade is dropped if its holding interval [close of t+1, close of t+1+h] shares a stretch of positive length with one of those days. |
+| R5 | **Turnover-aware P&L.** The position after the close of bar u is p_u = (1/h) Σ_{j=1..h} d·s_{u−j}, with s = 0 where unassigned, so each signal is held from the close of t+1 to the close of t+1+h. It earns p_u·r_{u+1} and pays c/2 per unit of \|p_u − p_{u−1}\|. Only evaluable bars' signals are traded, and a return across a dropped bucket contributes nothing. Reported as net return per day: the sum divided by the window's length in days. |
 | R6 | **Cost sensitivity**, c ∈ {0, 4, 7, 11} bp: 0 is gross; 4 is maker on both sides at §11's fees; 7 is maker in, taker out; 11 is taker plus half of a one-tick spread a side (a 0.00001 tick at a price near 0.1 is about 1 bp). |
 | R7 | **Winsorised returns.** fwd_t winsorised at the 1st and 99th percentiles of all defined fwd_t in the window, for that bar and h. |
-| R8 | **Funding included.** n_t − d·s_t·Σ_u FR_u, summing the settled rates FR_u whose settlement time τ_u satisfies entry ≤ τ_u < exit (entry and exit are the closing times of bars t+1 and t+1+h). A long position pays a positive rate. R8 is undefined for a trade whose holding interval contains an expected settlement time with no recorded rate; it is averaged over the trades for which it is defined, and their number is reported. |
-| R9 | **Predictability rather than profitability.** For each UTC day, the Spearman IC (average ranks for ties) between f_t and fwd_t over that day's bars, with each pair assigned to the day of bar t's start. Days with fewer than 20 pairs, or zero rank variance in either series, are dropped. The mean IC is tested two-sided, with a Hansen–Hodrick SE at ℓ = 1 day on the calendar-day grid. Holm at 0.05 is applied within this separate family of 60. This separates "predicts" from "pays". |
-| R10 | **Monotonicity.** Mean gross fwd_t (not multiplied by d) in each of the five expanding-window quintiles; quintiles whose edges coincide are merged. |
+| R8 | **Funding included.** n_t − d·s_t·Σ_u FR_u, summing the settled rates FR_u whose settlement time τ_u satisfies entry ≤ τ_u < exit (entry and exit are the closing times of bars t+1 and t+1+h). A long position pays a positive rate. R8 is undefined for a trade whose holding interval contains an expected settlement time with no recorded rate; it is averaged over the trades for which it is defined, and that count, with the §6.7 SE, goes to the robustness file. |
+| R9 | **Predictability rather than profitability.** The Spearman IC between f_t and fwd_t over the evaluable bars where both are defined: IC = mean of u_t·v_t, where u and v are the ranks of f and fwd (average ranks for ties) standardised to mean 0 and variance 1. Its SE is the §6.7 Hansen–Hodrick SE of that mean (ℓ = h − 1, products indexed on the grid, zero where undefined). The test is two-sided, and Holm at 0.05 is applied within this separate family of 60. This separates "predicts" from "pays". A mean of daily ICs was registered first and replaced before publication: ranking within a day biases it for persistent factors even on a random walk (§12). |
+| R10 | **Monotonicity.** Mean gross fwd_t (not multiplied by d) in each of the five expanding-window quintiles, with edges e1 < … < e4 at the 20th to 80th percentiles: Q1 = f < e1, Q2 = [e1, e2), Q3 = [e2, e3], Q4 = (e3, e4], Q5 = f > e4, so Q1 and Q5 are §6.4's traded buckets. Where e1 = e2, Q2 folds into Q3; where e3 = e4, Q4 folds into Q3. |
 
 ## 9. Power: what a null result will mean
 
@@ -553,20 +563,20 @@ The results report, for every `doge_2023` cell:
 
 Steps 4–6 for `doge_fwd` happen after 2026-11-23 20:00 UTC.
 
-**Results files.** `results/oos/<set>.csv` has one row per (instrument, bar, horizon, factor). For
-`majors_2023`, each cell also has a row with instrument = `POOLED`, which carries the F_majors
-statistics. The columns:
+**Results files.** `results/oos/<set>.csv` has one row per (instrument, bar, horizon, factor); those
+four key columns come first. For `majors_2023`, each cell also has a row with
+instrument = `POOLED`, which carries the F_majors statistics. The other columns, in order:
 
 - direction, direction_flagged, n_eval (bars whose forward return is defined), n_active (|A|),
   share_top, share_bottom
 - gross_bps, net_bps, se_bps, se_method (hh | bartlett_fallback), t_hh, p_one_sided, p_holm
 - q_bh, q_by, ub95_net_bps, ub95_family_net_bps, ci95_lo_bps, ci95_hi_bps (two-sided, μ̂ ∓ 1.960·SE)
 - mde_bps (from the freeze amendment), mde_realised_bps
-- p_placebo, p_placebo_family (R1), t_sqrt_h (R2), net_funding_bps (R8), ic_mean, ic_t, ic_p,
+- p_placebo, p_placebo_family (R1), t_sqrt_h (R2), net_funding_bps (R8), ic, ic_t, ic_p,
   ic_p_holm (R9)
 - status: `confirmed`, `not_rejected` or `untestable` on the primary; `rejected`, `not_rejected` or
   `untestable` on the secondary families; `descriptive` elsewhere. Plus `replicated` and
-  `consistent_on_majors` (true/false) on primary rows.
+  `consistent_on_majors` (true/false; false for cells that are not confirmed) on primary rows.
 - code_commit, manifest_sha256
 
 Columns are filled as follows, and are blank otherwise:
@@ -587,6 +597,10 @@ those columns hold depends on the row:
 
 - **R3, R4, R6 and R7:** se_bps and t_hh are the §6.7 statistics.
 - **R5:** value_bps is net bp per day, and se_bps and t_hh are blank.
+- **RL:** the realised mean run length of s_t in bars that §7 requires for a confirmed cell, over
+  the evaluable bars (a sign change, s = 0 or a dropped bucket ends a run). value_bps holds the
+  length in bars, n_active the number of runs, and se_bps and t_hh are blank. It is written for
+  every cell so that §7 needs no second pass over the data.
 - **R10:** value_bps is the quintile's mean gross fwd_t, and se_bps and t_hh are the §6.7
   statistics at ℓ = h − 1 on that quintile's bars.
 
@@ -630,7 +644,9 @@ counted?
 
 | Date | Section | Deviation | Reason | Test-set data seen? |
 |---|---|---|---|---|
-| — | — | none yet | — | — |
+| 2026-10-09 | §8 R9 | The mean of daily ICs was replaced by a full-window Spearman IC with a Hansen–Hodrick SE. | Synthetic tests during implementation showed the daily version is biased for persistent price-derived factors on a pure random walk (mean daily IC about −0.07 at 15m and −0.19 at 1H, \|t\| about 14 and 20), because ranking within a day shares the day's mean between the forward returns and the recent returns the factor is built from. | No. Made before publication; no in-sample v2 or test-set statistic had been computed. |
+| 2026-10-09 | §5, §6.7, §8 R1, R4, R5, R8, R10, §10 | Implementation details made explicit: warm-up values that depend on later bars; p = 1 when SE = 0; R1 per-cell t and offset indexing; R4 day assignment and overlap; R5 trading and per-day rule; R8 count location; R10 quintile rule; results key columns and label values; funding spacing taken from the series. | Ambiguities found while implementing; each was resolved by its most literal reading. | No. Made before publication; no in-sample v2 or test-set statistic had been computed. |
+| 2026-10-11 | §4.2, §10 | The funding staleness limit is a fixed 8 h instead of the series' median spacing. A robustness row RL (mean run length of s_t) is added. | Code review found that a median over the whole series lets later settlements decide whether an early bar is masked, and that §7's run length was computed nowhere, so it would have needed a second pass over test data. | No. Made before publication; no in-sample v2 or test-set statistic had been computed. |
 
 ## References
 
@@ -684,7 +700,7 @@ factors:
   rolling_vol_ratio:     {short: 60, long: 1440, zero_long_mean_value: 1.0}
   net_taker_flow:        {lookback: 60, side_data: none}
   basis_z_score:         {lookback: 1440, std_ddof: 0, nan_policy: omit_in_window, join: asof_backward_bar_start, spot_grid: perp_grid_nan_where_spot_dropped}
-  funding_cost_pressure: {lookback_settlements: 90, min_settlements: 10, window: trailing_partial, std_ddof: 0, join: asof_backward_bar_start, max_staleness: one_settlement_interval, staleness_test: ge}
+  funding_cost_pressure: {lookback_settlements: 90, min_settlements: 10, window: trailing_partial, std_ddof: 0, join: asof_backward_bar_start, max_staleness_hours: 8, staleness_test: ge}
   ou_reversion:          {window: 240, gate: none, sigma_df: W_minus_2}
   hurst_regime:          {window: 1440, q: 5, estimator: lo_mackinlay_bias_corrected}
   triple_screen:         {htf_multiple: 4, macd: [12, 26, 9], stoch_k: 14, trend: sign_of_histogram, form: continuous_signed, k_center: 50, htf_bar: latest_closed}
@@ -727,7 +743,7 @@ robustness:
   cost_sensitivity_bps: [0.0, 4.0, 7.0, 11.0]
   winsorize_pct: [1, 99]
   funding_included: {window: "entry <= settlement < exit", long_pays_positive: true, missing_settlement: undefined}
-  ic: {method: spearman, ties: average, per: utc_day, min_pairs: 20, se: hansen_hodrick, lag_days: 1, family_correction: holm, sidedness: two_sided, drop_zero_rank_variance: true}
+  ic: {method: spearman_full_window, ties: average, statistic: mean_of_standardised_rank_products, se: hansen_hodrick, lag: h_minus_1, family_correction: holm, sidedness: two_sided}
   monotonicity: {buckets: 5, edges: expanding, merge_coincident_edges: true}
 
 power: {power: 0.8, z_alpha: 3.144, z_power: 0.842, scaling: sqrt_N_IS_over_N_primary, report_realised_mde: true}
