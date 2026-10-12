@@ -69,6 +69,8 @@ python scripts/fetch_history.py --days 365 --with-spot
 python scripts/factor_research.py --bars 15m 1H
 ```
 
+The v1 fetcher is now locked for any window that touches the pre-registered test windows (`docs/preregistration.md` §4.1, §10), and it never writes into the in-sample directory or over an existing file, so this exact command is refused; post-freeze downloads use `scripts/fetch_v2.py`.
+
 ## 3. The cost problem comes first
 
 Before any factor is tested, the return distribution already constrains what

@@ -16,6 +16,24 @@ one is a look-ahead bug, so they are dropped at ingest rather than downstream.
 All endpoints are public — no API key, no signing. Requests are throttled to
 stay inside OKX's per-IP rate limit and retried with exponential backoff.
 
+**Locked for test data.** This is the v1 fetcher. It always fetches
+[now - days, now) into fixed paths, so run today it would download data from
+the pre-registered study's test windows and overwrite the in-sample files
+whose SHA-256 Appendix A pins (docs/preregistration.md, §4.2 and §10). It
+therefore refuses, before any request:
+
+  * a window that overlaps a protected test window
+    (research.spec.protected_windows), exit 3. There is no unlock flag:
+    post-freeze downloads go through scripts/fetch_v2.py, which checks the
+    freeze in git and writes a manifest;
+  * any output path inside Appendix A's insample_dir, exit 3;
+  * any output file that already exists, exit 4. Every file is created
+    exclusively (research.io.write_once_parquet), never overwritten.
+
+Every page is bounded on both sides, so no page can reach below the window's
+start however large a hole in the data, and open interest is requested for
+the window only.
+
 Usage:
     python scripts/fetch_history.py --days 365
     python scripts/fetch_history.py --days 30 --inst-id BTC-USDT-SWAP
@@ -25,11 +43,12 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import re
 import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import aiohttp
 import polars as pl
@@ -40,6 +59,9 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from loguru import logger
+
+import research.spec as spec
+from research.io import write_once_parquet
 
 OKX_REST_BASE = "https://www.okx.com"
 
@@ -53,8 +75,47 @@ REQUEST_INTERVAL_S = 0.15
 
 MAX_RETRIES = 5
 MINUTE_MS = 60_000
+# Funding pages are sliced by the hour, not by the 8-hour settlement step, so
+# a slice holds at most PAGE_LIMIT settlements even if OKX shortens the
+# funding interval; each page then returns its whole slice.
+FUNDING_SLOT_MS = 3_600_000
 
 HISTORY_DIR = REPO_ROOT / "data" / "history"
+
+EXIT_OK = 0
+EXIT_FAILED = 1
+EXIT_USAGE = 2
+EXIT_PROTECTED = 3
+EXIT_EXISTS = 4
+
+_BAR = re.compile(r"(\d+)([mHDW])(utc)?")
+_UNIT_MS = {"m": MINUTE_MS, "H": 3_600_000, "D": 86_400_000, "W": 7 * 86_400_000}
+
+
+def bar_ms(bar: str) -> int:
+    """'1m' -> 60000, '4H' -> 14400000, '1Dutc' -> 86400000; ValueError otherwise."""
+    m = _BAR.fullmatch(bar)
+    if m is None or int(m.group(1)) <= 0:
+        raise ValueError(f"unsupported bar {bar!r}; expected e.g. 1m, 15m, 1H, 4H, 1D")
+    return int(m.group(1)) * _UNIT_MS[m.group(2)]
+
+
+# The calendar clock in epoch ms; the window is [now - days, now). A seam so
+# tests can ask what the guard does on another date.
+_now_ms: Callable[[], int] = lambda: int(time.time() * 1000)
+
+
+def insample_dir() -> Path:
+    """Appendix A's in-sample directory, whose files are never modified (§4.2)."""
+    return (REPO_ROOT / spec.get_spec()["insample_dir"]).resolve()
+
+
+def is_inside(path: Path, root: Path) -> bool:
+    try:
+        Path(path).resolve().relative_to(Path(root).resolve())
+    except ValueError:
+        return False
+    return True
 
 
 class OKXHistoryClient:
@@ -124,30 +185,41 @@ async def fetch_candles(
     end_ms: int,
 ) -> pl.DataFrame:
     """
-    Page backwards through 1m candles from ``end_ms`` down to ``start_ms``.
+    Page backwards through candles from ``end_ms`` down to ``start_ms``.
 
     OKX returns each page newest-first and paginates with ``after`` = "give me
     bars older than this timestamp", so we walk backwards and reverse at the end.
+    Each page asks for one slice [floor, cursor) of at most PAGE_LIMIT bars,
+    with ``before`` = floor - 1 as its lower bound, and floor never goes below
+    ``start_ms``: however large a hole in the data, no page returns bars from
+    before the window, which may belong to a protected test window. An empty
+    page is a hole or the start of history; the walk steps over it.
 
     Row format: [ts, open, high, low, close, vol, volCcy, volCcyQuote, confirm]
     """
     rows: List[List[str]] = []
+    step = bar_ms(bar)
     cursor = end_ms
-    expected_pages = max(1, (end_ms - start_ms) // MINUTE_MS // PAGE_LIMIT)
+    expected_pages = max(1, (end_ms - start_ms) // step // PAGE_LIMIT)
     page = 0
+    empty_since: Optional[int] = None
 
     logger.info(f"Fetching {bar} candles for {inst_id} (~{expected_pages} pages)")
 
     while cursor > start_ms:
+        n = min(PAGE_LIMIT, -(-(cursor - start_ms) // step))
+        floor = max(start_ms, cursor - n * step)
         data = await client.get(
             "/api/v5/market/history-candles",
-            {"instId": inst_id, "bar": bar, "after": str(cursor), "limit": str(PAGE_LIMIT)},
+            {"instId": inst_id, "bar": bar, "after": str(cursor), "before": str(floor - 1), "limit": str(n)},
         )
 
-        # Empty page means we ran past the start of available history.
         if not data:
-            logger.info("Reached the end of available history")
-            break
+            if empty_since is None:
+                empty_since = cursor
+            cursor = floor
+            continue
+        empty_since = None
 
         rows.extend(data)
         page += 1
@@ -164,6 +236,8 @@ async def fetch_candles(
             got = datetime.fromtimestamp(oldest_ts / 1000, tz=timezone.utc)
             logger.info(f"  page {page}/{expected_pages} — back to {got:%Y-%m-%d %H:%M} UTC")
 
+    if empty_since is not None:
+        logger.info(f"No bars before {datetime.fromtimestamp(empty_since / 1000, tz=timezone.utc):%Y-%m-%d %H:%M} UTC")
     if not rows:
         return pl.DataFrame()
 
@@ -197,19 +271,27 @@ async def fetch_candles(
 async def fetch_funding_rates(
     client: OKXHistoryClient, inst_id: str, start_ms: int, end_ms: int
 ) -> pl.DataFrame:
-    """Page backwards through funding-rate settlements (every 8h for most swaps)."""
+    """
+    Page backwards through funding-rate settlements (every 8h for most swaps).
+
+    Bounded per page like the candles: a slice [floor, cursor) of at most
+    PAGE_LIMIT hours, never below ``start_ms``; an empty slice is stepped over.
+    """
     rows: List[Dict[str, str]] = []
     cursor = end_ms
 
     logger.info(f"Fetching funding rate history for {inst_id}")
 
     while cursor > start_ms:
+        n = min(PAGE_LIMIT, -(-(cursor - start_ms) // FUNDING_SLOT_MS))
+        floor = max(start_ms, cursor - n * FUNDING_SLOT_MS)
         data = await client.get(
             "/api/v5/public/funding-rate-history",
-            {"instId": inst_id, "after": str(cursor), "limit": str(PAGE_LIMIT)},
+            {"instId": inst_id, "after": str(cursor), "before": str(floor - 1), "limit": str(n)},
         )
         if not data:
-            break
+            cursor = floor
+            continue
 
         rows.extend(data)
         oldest_ts = int(data[-1]["fundingTime"])
@@ -235,7 +317,7 @@ async def fetch_funding_rates(
 
 
 async def fetch_open_interest(
-    client: OKXHistoryClient, ccy: str, period: str = "5m"
+    client: OKXHistoryClient, ccy: str, start_ms: int, end_ms: int, period: str = "5m"
 ) -> pl.DataFrame:
     """
     Fetch open-interest history from OKX's 'rubik' statistics endpoint.
@@ -246,13 +328,18 @@ async def fetch_open_interest(
     DOGE-USDT-SWAP open interest, not the real thing — which is why this is
     the one series the script will skip without failing.
 
+    The request names the window (``begin``/``end``): without it OKX returns
+    its latest stretch, which need not lie in the window the guard approved.
+    Rows outside [start_ms, end_ms) are dropped as well, in case it does not
+    honour them.
+
     Row format: [ts, openInterest, volume]
     """
     logger.info(f"Fetching open-interest history for {ccy} (period={period})")
 
     data = await client.get(
         "/api/v5/rubik/stat/contracts/open-interest-volume",
-        {"ccy": ccy, "period": period},
+        {"ccy": ccy, "period": period, "begin": str(start_ms), "end": str(end_ms - 1)},
     )
     if not data:
         return pl.DataFrame()
@@ -263,7 +350,7 @@ async def fetch_open_interest(
             "oi": [float(r[1]) for r in data],
             "oi_volume": [float(r[2]) for r in data],
         }
-    ).sort("timestamp")
+    ).filter((pl.col("timestamp") >= start_ms) & (pl.col("timestamp") < end_ms)).sort("timestamp")
 
 
 def spot_inst_id(inst_id: str) -> str:
@@ -336,13 +423,27 @@ def summarize_candles(df: pl.DataFrame, fee_bps_round_trip: float = 10.0) -> Non
     logger.info("=" * 62)
 
 
+def _display(path: Path) -> str:
+    try:
+        return Path(path).resolve().relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        return str(path)
+
+
 def write_parquet(df: pl.DataFrame, path: Path, label: str) -> None:
+    """
+    Create ``path`` holding ``df``; never overwrite, never inside insample_dir.
+
+    run() refuses both before the first request; this repeats the check at
+    the point of writing so no other caller can get round it.
+    """
+    if is_inside(path, insample_dir()):
+        raise PermissionError(f"{path} is inside Appendix A's insample_dir, whose files are never modified")
     if df.is_empty():
         logger.warning(f"{label}: nothing fetched, not writing")
         return
 
-    path.parent.mkdir(parents=True, exist_ok=True)
-    df.write_parquet(path)
+    write_once_parquet(df, path)
 
     start = datetime.fromtimestamp(df["timestamp"][0] / 1000, tz=timezone.utc)
     end = datetime.fromtimestamp(df["timestamp"][-1] / 1000, tz=timezone.utc)
@@ -350,19 +451,70 @@ def write_parquet(df: pl.DataFrame, path: Path, label: str) -> None:
     logger.success(
         f"{label}: {df.height:,} rows  "
         f"{start:%Y-%m-%d %H:%M} -> {end:%Y-%m-%d %H:%M} UTC  "
-        f"({size_mb:.1f} MB) -> {path.relative_to(REPO_ROOT)}"
+        f"({size_mb:.1f} MB) -> {_display(path)}"
     )
 
 
+def output_paths(args: argparse.Namespace, out_dir: Path) -> Dict[str, Path]:
+    """Every file this invocation may write, keyed by series."""
+    out = {"candles": out_dir / f"candles_{args.bar}.parquet"}
+    if args.with_spot and spot_inst_id(args.inst_id) != args.inst_id:
+        out["spot"] = out_dir / f"spot_candles_{args.bar}.parquet"
+    out["funding"] = out_dir / "funding_rates.parquet"
+    if not args.skip_oi:
+        out["oi"] = out_dir / "open_interest.parquet"
+    return out
+
+
+def refusal(args: argparse.Namespace, start_ms: int, end_ms: int, out_dir: Path) -> Optional[Tuple[int, str]]:
+    """(exit code, reason) if this invocation must not send a single request, else None."""
+    try:
+        bar_ms(args.bar)
+    except ValueError as exc:
+        return EXIT_USAGE, str(exc)
+    if args.days <= 0:
+        return EXIT_USAGE, "--days must be positive"
+    hit = spec.protected_overlapping(start_ms, end_ms)
+    if hit:
+        fmt = "%Y-%m-%d %H:%M"
+        spans = ", ".join(
+            f"[{datetime.fromtimestamp(lo / 1000, tz=timezone.utc):{fmt}}, "
+            f"{datetime.fromtimestamp(hi / 1000, tz=timezone.utc):{fmt}})" for lo, hi in hit
+        )
+        return EXIT_PROTECTED, (
+            f"the last {args.days} day(s) overlap the pre-registered test window(s) {spans} UTC "
+            "(docs/preregistration.md §10). This fetcher has no unlock; after the freeze, "
+            "download test data with scripts/fetch_v2.py"
+        )
+    targets = output_paths(args, out_dir)
+    inside = [str(p) for p in targets.values() if is_inside(p, insample_dir())]
+    if inside:
+        return EXIT_PROTECTED, (
+            f"{', '.join(inside)} would be written inside Appendix A's insample_dir, whose files "
+            "are never modified (§4.2); use another --inst-id or scripts/fetch_v2.py --out-dir"
+        )
+    existing = [str(p) for p in targets.values() if p.exists()]
+    if existing:
+        return EXIT_EXISTS, f"refusing to overwrite {', '.join(existing)} (files are written once)"
+    return None
+
+
 async def run(args: argparse.Namespace) -> int:
-    end_ms = int(time.time() * 1000)
+    end_ms = _now_ms()
     start_ms = end_ms - args.days * 24 * 60 * 60 * 1000
     out_dir = HISTORY_DIR / args.inst_id
     ccy = args.inst_id.split("-")[0]
 
+    refused = refusal(args, start_ms, end_ms, out_dir)
+    if refused is not None:
+        code, why = refused
+        logger.error(f"Refusing: {why}.")
+        return code
+    targets = output_paths(args, out_dir)
+
     logger.info(
         f"Target: {args.inst_id}  bar={args.bar}  "
-        f"span={args.days}d  ->  {out_dir.relative_to(REPO_ROOT)}"
+        f"span={args.days}d  ->  {_display(out_dir)}"
     )
 
     timeout = aiohttp.ClientTimeout(total=30)
@@ -374,10 +526,10 @@ async def run(args: argparse.Namespace) -> int:
         candles = await fetch_candles(client, args.inst_id, args.bar, start_ms, end_ms)
         if candles.is_empty():
             logger.error("No candles returned — check the instrument id and try again")
-            return 1
+            return EXIT_FAILED
 
         report_gaps(candles)
-        write_parquet(candles, out_dir / f"candles_{args.bar}.parquet", "Candles")
+        write_parquet(candles, targets["candles"], "Candles")
 
         if args.with_spot:
             spot_inst = spot_inst_id(args.inst_id)
@@ -386,17 +538,15 @@ async def run(args: argparse.Namespace) -> int:
             else:
                 logger.info(f"Fetching spot leg {spot_inst} for basis calculation")
                 spot = await fetch_candles(client, spot_inst, args.bar, start_ms, end_ms)
-                write_parquet(
-                    spot, out_dir / f"spot_candles_{args.bar}.parquet", "Spot candles"
-                )
+                write_parquet(spot, targets["spot"], "Spot candles")
 
         funding = await fetch_funding_rates(client, args.inst_id, start_ms, end_ms)
-        write_parquet(funding, out_dir / "funding_rates.parquet", "Funding rates")
+        write_parquet(funding, targets["funding"], "Funding rates")
 
         if not args.skip_oi:
             try:
-                oi = await fetch_open_interest(client, ccy, args.oi_period)
-                write_parquet(oi, out_dir / "open_interest.parquet", "Open interest")
+                oi = await fetch_open_interest(client, ccy, start_ms, end_ms, args.oi_period)
+                write_parquet(oi, targets["oi"], "Open interest")
             except Exception as exc:
                 # Non-fatal by design: this endpoint is the flakiest of the three
                 # and the candles are what actually matter.
@@ -407,10 +557,10 @@ async def run(args: argparse.Namespace) -> int:
         elapsed = time.monotonic() - started
         logger.info(f"Done in {elapsed:.1f}s across {client.request_count} requests")
 
-    return 0
+    return EXIT_OK
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Fetch real OKX history into Parquet for research and backtesting.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -432,7 +582,7 @@ def parse_args() -> argparse.Namespace:
         default=10.0,
         help="round-trip taker cost in bp used by the viability summary (default 10 = 0.05%% each way)",
     )
-    return p.parse_args()
+    return p.parse_args(argv)
 
 
 def main() -> int:

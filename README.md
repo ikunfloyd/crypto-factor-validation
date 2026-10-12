@@ -160,6 +160,8 @@ python scripts/fetch_history.py --days 365 --with-spot   # -> data/history/
 python scripts/factor_research.py                        # IC / IR / layered returns
 ```
 
+> **Locked for test data.** `fetch_history.py` (v1) refuses any window that touches the pre-registered study's test windows (`docs/preregistration.md` §4.1, §10) and never writes into the in-sample directory or over an existing file, so the command above is refused (it would overwrite `data/history/DOGE-USDT-SWAP/`); after the freeze, test data is downloaded with `scripts/fetch_v2.py`.
+
 `fetch_history.py` keeps only closed candles (OKX marks an unfinished bar with
 `confirm="0"`; training on one is a look-ahead bug) and prints the return
 distribution against round-trip cost. `factor_research.py` reports each

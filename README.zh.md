@@ -133,6 +133,8 @@ python scripts/fetch_history.py --days 365 --with-spot   # -> data/history/
 python scripts/factor_research.py                        # IC / IR / 分层收益
 ```
 
+> **测试数据已锁定。** `fetch_history.py`（v1）拒绝任何触及预注册研究测试窗口的时间段（`docs/preregistration.md` §4.1、§10），也绝不写入样本内目录或覆盖已有文件，因此上面的命令会被拒绝（它会覆盖 `data/history/DOGE-USDT-SWAP/`）；冻结之后的测试数据一律用 `scripts/fetch_v2.py` 下载。
+
 `fetch_history.py` 只保留已收盘的K线（OKX 用 `confirm="0"` 标记未完结的K线，
 拿它训练就是前视偏差），并打印收益率分布与来回成本的对比。
 `factor_research.py` 输出每个因子的信息系数、稳定性、因子相关性矩阵，以及扣费
