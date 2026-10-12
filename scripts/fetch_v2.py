@@ -48,22 +48,40 @@ reproducibility from public data cover that.
 
 Gaps are reported, never filled.
 
-Usage:
-    python scripts/fetch_v2.py --kind candles --inst-id DOGE-USDT \\
-        --start '2025-09-24 00:00' --end '2026-09-23 20:00' \\
-        --out-dir data/history/is_supp --manifest results/manifest_is_supp_candles.json
-    python scripts/fetch_v2.py --kind funding --inst-id DOGE-USDT-SWAP \\
-        --start '2025-09-24 00:00' --end '2026-09-23 20:00' \\
-        --out-dir data/history/is_supp --manifest results/manifest_is_supp_funding.json
+Usage: one invocation and one manifest per set, the manifest
+research/pipeline.py reads. Relative paths are the repository's wherever the
+script is started from. Each window is the set's warm-up and evaluation
+window (§4.1; scripts/run_oos.py, manifest_window_required), and each set
+fetches its perpetuals' candles and funding and their spot legs' candles
+(Appendix A: sets, spot_legs). tests/test_fetch_v2.py checks these commands
+against Appendix A.
 
-    # One manifest per set (what research/pipeline.py reads), e.g. the
-    # in-sample supplement and, after the freeze, the primary set:
+    # §10 step 2, the in-sample supplement:
     python scripts/fetch_v2.py --candles DOGE-USDT --funding DOGE-USDT-SWAP \\
         --start '2025-09-24 00:00' --end '2026-09-23 20:00' \\
         --out-dir data/history/is_supp --manifest results/manifest_is_supp.json
+
+    # §10 step 4, once the freeze amendment is pushed:
+    python scripts/fetch_v2.py --candles DOGE-USDT-SWAP DOGE-USDT --funding DOGE-USDT-SWAP \\
+        --start '2024-06-25 20:00' --end '2025-09-23 20:00' --allow-test-data \\
+        --out-dir data/history/oos/doge_2024 --manifest results/oos/manifest_doge_2024.json
+    python scripts/fetch_v2.py \\
+        --candles BTC-USDT-SWAP BTC-USDT ETH-USDT-SWAP ETH-USDT SOL-USDT-SWAP SOL-USDT \\
+        --funding BTC-USDT-SWAP ETH-USDT-SWAP SOL-USDT-SWAP \\
+        --start '2023-06-25 20:00' --end '2024-09-23 20:00' --allow-test-data \\
+        --out-dir data/history/oos/majors_2023 --manifest results/oos/manifest_majors_2023.json
     python scripts/fetch_v2.py --candles DOGE-USDT-SWAP DOGE-USDT --funding DOGE-USDT-SWAP \\
         --start '2023-06-25 20:00' --end '2024-09-23 20:00' --allow-test-data \\
         --out-dir data/history/oos/doge_2023 --manifest results/oos/manifest_doge_2023.json
+
+    # doge_fwd, after 2026-11-23 20:00 UTC. Its warm-up is read from the
+    # in-sample files (§4.1), so its window starts where the in-sample year ends:
+    python scripts/fetch_v2.py --candles DOGE-USDT-SWAP DOGE-USDT --funding DOGE-USDT-SWAP \\
+        --start '2026-09-23 20:00' --end '2026-11-23 20:00' --allow-test-data \\
+        --out-dir data/history/oos/doge_fwd --manifest results/oos/manifest_doge_fwd.json
+
+The single-kind form (--kind with --inst-id) writes a manifest that no set
+reads; it is for looking at one series.
 """
 from __future__ import annotations
 
@@ -1019,8 +1037,12 @@ def run(args: argparse.Namespace) -> int:
     if args.allow_test_data and not unlocked:
         logger.warning(f"--allow-test-data has no effect: {problem}")
 
-    targets = {(k, i): Path(args.out_dir) / i / OUTPUT_FILE[k] for k, i in jobs}
-    existing = [str(p) for p in [*targets.values(), Path(args.manifest)] if p.exists()]
+    # Relative paths are the repository's, as the usage gives them, wherever the
+    # script is started from: research/pipeline.py looks for the files there.
+    out_dir, manifest_path = (p if p.is_absolute() else REPO_ROOT / p
+                              for p in (Path(args.out_dir), Path(args.manifest)))
+    targets = {(k, i): out_dir / i / OUTPUT_FILE[k] for k, i in jobs}
+    existing = [str(p) for p in [*targets.values(), manifest_path] if p.exists()]
     if existing:
         logger.error(f"Refusing to overwrite: {existing}")
         return EXIT_EXISTS
@@ -1088,11 +1110,11 @@ def run(args: argparse.Namespace) -> int:
             "requests": client.requests,
             "series": series,
         }
-        write_once_json(manifest, args.manifest)
+        write_once_json(manifest, manifest_path)
     except FileExistsError as exc:
         logger.error(f"Refusing to overwrite: {exc.filename}")
         return EXIT_EXISTS
-    logger.info(f"Manifest -> {args.manifest} ({client.requests} requests)")
+    logger.info(f"Manifest -> {manifest_path} ({client.requests} requests)")
     return EXIT_OK
 
 

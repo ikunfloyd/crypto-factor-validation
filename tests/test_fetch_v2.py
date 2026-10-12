@@ -1139,3 +1139,59 @@ class TestOneManifestPerSet:
         fake = FakeOkx().install(monkeypatch)
         code, *_ = self.run(tmp_path, *argv)
         assert code == fv.EXIT_USAGE and fake.json_calls == []
+
+    def test_relative_paths_are_the_repositorys(self, monkeypatch, isolated, tmp_path):
+        # The usage gives repository paths; started from elsewhere, the script
+        # must still write where research/pipeline.py looks.
+        self.server(monkeypatch, isolated)
+        repo, elsewhere = tmp_path / "repo", tmp_path / "elsewhere"
+        elsewhere.mkdir()
+        monkeypatch.setattr(fv, "REPO_ROOT", repo)
+        monkeypatch.setattr(fv.integrity, "foreign_code_problem", lambda root: None)  # the code is under the real root
+        monkeypatch.chdir(elsewhere)
+        code = fv.main(["--candles", "DOGE-USDT", "--start", self.START, "--end", self.END,
+                        "--out-dir", "data/out", "--manifest", "results/m.json"])
+        assert code == fv.EXIT_OK
+        assert (repo / "data/out/DOGE-USDT/candles_1m.parquet").exists() and (repo / "results/m.json").exists()
+        assert not any(elsewhere.iterdir())
+
+
+def test_usage_commands_match_the_sets():
+    # The usage is what §10 steps 2 and 4 will be typed from, after the code is
+    # frozen; a wrong window or a missing instrument there would cost a manifest
+    # that can be committed only once.
+    import shlex
+    from research import pipeline
+
+    ro_spec = importlib.util.spec_from_file_location("run_oos_for_usage", spec.REPO_ROOT / "scripts" / "run_oos.py")
+    ro = importlib.util.module_from_spec(ro_spec)
+    ro_spec.loader.exec_module(ro)
+    sp = spec.get_spec()
+
+    text = fv.__doc__.split("\nUsage:", 1)[1].replace("\\\n", " ")
+    commands = [shlex.split(line.strip())[2:] for line in text.splitlines()
+                if line.strip().startswith("python scripts/fetch_v2.py")]
+    seen = {}
+    for argv in commands:
+        a = fv.parse_args(argv)
+        manifest = a.manifest.as_posix()
+        if manifest == pipeline.IS_SUPP_MANIFEST.as_posix():
+            is_inst = sp["sets"]["IS"]["inst"]
+            # §10 step 2: the supplement runs 2025-09-24 -> the in-sample end.
+            want = (utc_ms("2025-09-24 00:00"), int(sp["sets"]["IS"]["end_ms"]),
+                    [sp["spot_legs"][i] for i in is_inst], list(is_inst), pipeline.IS_SUPP_DIR.as_posix(), False)
+            name = "is_supp"
+        else:
+            name = next(s for s in ro.oos_sets() if pipeline.oos_manifest_path(s).as_posix() == manifest)
+            insts = sp["sets"][name]["inst"]
+            lo, hi = ro.manifest_window_required(name)
+            out_dir = pipeline.input_files(name)[0].path.parent.parent.relative_to(spec.REPO_ROOT).as_posix()
+            if name == "doge_fwd":
+                out_dir = f"data/history/oos/{name}"
+            want = (lo, hi, [x for i in insts for x in (i, sp["spot_legs"][i])], list(insts), out_dir, True)
+        got = (fv.parse_utc(a.start), fv.parse_utc(a.end), a.candles, a.funding, a.out_dir.as_posix(),
+               a.allow_test_data)
+        assert got == want, name
+        assert name not in seen
+        seen[name] = argv
+    assert set(seen) == {"is_supp", *ro.oos_sets()}
