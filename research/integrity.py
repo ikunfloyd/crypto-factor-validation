@@ -9,12 +9,15 @@ research`` load that checkout's package while every git guard still passes
 on this one. The scripts therefore put their own repository first on
 sys.path before importing anything from it, and refuse to run if a module
 of the repository's own packages was nonetheless loaded from elsewhere
-(foreign_code_problem words that refusal once for all of them).
+(foreign_code_problem words that refusal once for all of them). A script
+that uses another loads it by path from the same checkout (load_script).
 """
 from __future__ import annotations
 
+import importlib.util
 import sys
 from pathlib import Path
+from types import ModuleType
 from typing import Iterable, List, Optional
 
 # The top-level packages of this repository that a run imports.
@@ -65,4 +68,30 @@ def foreign_code_problem(repo_root: Path) -> Optional[str]:
             + (f" and {len(foreign) - 5} more" if len(foreign) > 5 else ""))
 
 
-__all__ = ["OWN_PACKAGES", "foreign_modules", "foreign_code_problem"]
+def load_script(repo_root: Path, name: str) -> ModuleType:
+    """
+    ``repo_root``/scripts/<name>.py as a module, for one script that uses another.
+
+    scripts/ is not a package, and ``import fetch_v2`` would search sys.path,
+    which holds no scripts/ directory under ``python -m`` or pytest and could
+    hold another checkout's. Loading by path takes this checkout's file. It is
+    registered under its own name, so a second load returns the same module.
+    """
+    path = (Path(repo_root) / "scripts" / f"{name}.py").resolve()
+    loaded = sys.modules.get(name)
+    if loaded is not None and Path(getattr(loaded, "__file__", None) or "").resolve() == path:
+        return loaded
+    found = importlib.util.spec_from_file_location(name, path)
+    if found is None or found.loader is None:
+        raise ImportError(f"cannot load {path}")
+    module = importlib.util.module_from_spec(found)
+    sys.modules[name] = module
+    try:
+        found.loader.exec_module(module)
+    except BaseException:
+        sys.modules.pop(name, None)
+        raise
+    return module
+
+
+__all__ = ["OWN_PACKAGES", "foreign_modules", "foreign_code_problem", "load_script"]
