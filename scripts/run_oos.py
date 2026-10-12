@@ -51,12 +51,14 @@ whose data was analysed by their own runs):
   8. The set's manifest was committed once and never edited, after the
      freeze amendment, and pushed (§10 step 4); it records that test data
      was unlocked, the public repository, and that repository's main branch
-     at fetch time, which holds the amendment's last change; its window
-     covers the set's whole window including its warm-up; each series' own
-     data, read from the files, reaches to within an hour (funding: two
-     settlements) of both ends of it; and every input file's SHA-256 equals
-     the manifest's (doge_fwd: also Appendix A's and the in-sample
-     supplement's, since its warm-up is in-sample data).
+     at fetch time, which holds the amendment's freeze blocks as they are
+     now (its prose may still change); its window covers the set's whole
+     window including its warm-up; each perpetual's candles, read from the
+     files, reach to within a day of both ends of it (a spot leg or funding
+     series that does not is logged, since §4.2 and §6.8 say what its cells
+     become); and every input file's SHA-256 equals the manifest's
+     (doge_fwd: also Appendix A's and the in-sample supplement's, since its
+     warm-up is in-sample data).
   9. doge_2023 only: results/oos/doge_2024.csv and majors_2023.csv are
      committed, once and unedited, by a run of this script on the frozen
      code (their code_commit and manifest_sha256 columns are checked against
@@ -135,16 +137,17 @@ MAIN_BRANCH = "main"
 ALLOWED_PREFIXES = ("docs/", "results/")
 PREREG_REL = PREREG_PATH.relative_to(SPEC_ROOT).as_posix()     # docs/preregistration.md
 
-# How far a series may stop short of either end of the set's window and still
-# cover it: one 1H bucket, or two sampling steps where that is longer (so one
-# missing settlement at an edge of a funding series is a gap, not a
-# truncation; settlements fall 4 h inside each 20:00 boundary). The coverage
-# check is there to catch a truncated
-# download (a wrong clock, an interrupted walk). A few bars missing at an edge
-# are ordinary gaps, which §4.2's rules handle by dropping the incomplete
-# bucket; and since this code is frozen at the tag (guard 4), refusing real
-# data over them could not be undone without a public deviation.
-COVERAGE_SLACK_MS = pipeline.HOUR_MS
+# How far a required series (a perpetual's candles) may stop short of either
+# end of the set's window and still cover it: one day, or two sampling steps
+# where that is longer. The coverage check is there to catch a truncated
+# download (a wrong clock, an interrupted walk). fetch_v2 walks every window to
+# its start and checks OKX's clock, so a series it wrote that stops short within
+# a day means OKX has no bars there: an outage or a hole, whose bars §4.2's
+# rules drop like any other gap and which costs a negligible share of the
+# set's bars. Since this code is frozen at the tag (guard 4), refusing real data
+# over it could not be undone without a public deviation. A day or more is not
+# an outage to shrug off, and refuses.
+COVERAGE_SLACK_MS = pipeline.DAY_MS
 
 # pipeline.run_oos_set's signature: (set_name, directions, *, root, mde_bps,
 # code_commit, manifest_sha256) -> (main rows, robustness rows or None).
@@ -363,9 +366,18 @@ def coverage_problems(root: Path, set_name: str, series: List[Dict[str, Any]]) -
     start plus the slack, and its last at or after the window's end minus
     it; the slack is COVERAGE_SLACK_MS or two of the series' steps,
     whichever is longer. A series of no known kind is refused, since its step is unknown.
+
+    Only a required series (the perpetuals' candles, pipeline.input_files)
+    that falls short is refused. A spot leg or funding series that stops
+    short shows what the exchange still has, and §4.2 and §6.8 say what its
+    factor's cells become (undefined on the bars it does not reach, or
+    untestable); refusing it would refuse the whole set, and with a
+    secondary set the primary set's labels, over cells the pre-registration
+    expects to lose. It is logged instead.
     """
     lo, hi = manifest_window_required(set_name)
     steps = series_step_ms()
+    required = {f.path.resolve() for f in pipeline.input_files(set_name, root) if f.required}
     out = []
     for e in series:
         rel, kind = str(e.get("path")), e.get("kind")
@@ -380,11 +392,16 @@ def coverage_problems(root: Path, set_name: str, series: List[Dict[str, Any]]) -
             continue
         first, last = ts.min(), ts.max()
         slack = max(2 * steps[kind], COVERAGE_SLACK_MS)
+        problem = None
         if first is None:
-            out.append(f"{rel} holds no rows")
+            problem = f"{rel} holds no rows"
         elif first >= lo + slack or last < hi - slack:
-            out.append(f"{rel} runs from {_utc(first)} to {_utc(last)} UTC, but {set_name} needs "
+            problem = (f"{rel} runs from {_utc(first)} to {_utc(last)} UTC, but {set_name} needs "
                        f"[{_utc(lo)}, {_utc(hi)}) to within {slack / pipeline.HOUR_MS:g} h at either end")
+        if problem and path.resolve() in required:
+            out.append(problem)
+        elif problem:
+            logger.warning(f"{problem}; an optional input, so its cells follow §4.2 and §6.8")
     return out
 
 
@@ -463,8 +480,11 @@ def _manifest_after_the_freeze_and_pushed(root: Path, rel: str, added: str) -> N
 def _manifest_remote_record(root: Path, rel: str, manifest: Dict[str, Any]) -> None:
     """
     What fetch_v2 saw online, since offline the push above is only a local
-    ref: the public repository, whose main branch held the amendment's last
-    change when the data was fetched.
+    ref: the public repository, whose main branch held the amendment in force
+    when the data was fetched. In force means its machine-readable blocks,
+    which verify_freeze has just checked against the tag; its prose (a
+    Software Heritage identifier filled in, a typo) may change after the
+    download, since the run reads nothing from it.
     """
     url, seen = manifest.get("remote_url"), manifest.get("remote_main_commit")
     if not isinstance(url, str) or not freeze.is_public_remote(url):
@@ -473,10 +493,15 @@ def _manifest_remote_record(root: Path, rel: str, manifest: Dict[str, Any]) -> N
     if not (isinstance(seen, str) and gitrepo.FULL_SHA1.fullmatch(seen) and gitrepo.commit_of(root, seen) == seen):
         raise Refusal(f"{rel} records remote_main_commit {seen!r}, which is not the full hash of a commit here; "
                       "scripts/fetch_v2.py records the main branch it found the amendment on")
-    problem = freeze.amendment_missing_from(root, seen, "it")
-    if problem:
-        raise Refusal(f"{rel} records remote_main_commit {seen[:12]}, but {problem}; the public main branch "
-                      "must have had the amendment when the data was fetched (§10 step 3 before step 4)")
+    amendment = _freeze_spec()["amendment"]
+    try:
+        then = freeze.freeze_blocks(gitrepo.show_file(root, seen, amendment))
+    except gitrepo.GitError:
+        then = {}
+    if not then or then != freeze.freeze_blocks(gitrepo.show_file(root, "HEAD", amendment)):
+        raise Refusal(f"{rel} records remote_main_commit {seen[:12]}, whose {amendment} does not hold the "
+                      "freeze blocks in force; the public main branch must have had them when the data was "
+                      "fetched (§10 step 3 before step 4)")
 
 
 def _inputs_match_and_cover(root: Path, set_name: str, manifest: Dict[str, Any]) -> None:

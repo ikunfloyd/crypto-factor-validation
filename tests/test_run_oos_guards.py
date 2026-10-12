@@ -1030,28 +1030,42 @@ class TestManifest:
         code, stub = run_oos(repo)
         assert_refused(repo, "doge_2024", code, stub, messages, "manifest_doge_2024.json was committed 2 times")
 
-    @pytest.mark.parametrize("which", ["ends_a_month_early", "ends_an_hour_early", "starts_an_hour_late",
-                                       "funding_ends_two_settlements_early", "unknown_kind"])
+    @pytest.mark.parametrize("which", ["ends_a_month_early", "ends_a_day_early", "starts_a_day_late",
+                                       "unknown_kind"])
     def test_data_does_not_cover_the_window(self, tmp_path, messages, which):
         # The manifest's window records what was asked for; the files show what
-        # arrived. A full hour of bars missing at an edge is a truncated
-        # download, not a gap (the window's last bar starts at hi - 1 min).
+        # arrived. A full day of a perpetual's bars missing at an edge is a
+        # truncated download, not an outage (the window's last bar starts at hi - 1 min).
         repo = build(tmp_path, manifest=False)
         lo, hi = ro.manifest_window_required("doge_2024")
         kw = {"ends_a_month_early": dict(data=(lo, hi - 30 * DAY_MS)),
-              "ends_an_hour_early": dict(data=(lo, hi - MINUTE_MS - P.HOUR_MS)),
-              "starts_an_hour_late": dict(data=(lo + P.HOUR_MS, hi - MINUTE_MS)),
-              "funding_ends_two_settlements_early": dict(funding=(lo + 4 * P.HOUR_MS, hi - 20 * P.HOUR_MS)),
+              "ends_a_day_early": dict(data=(lo, hi - MINUTE_MS - DAY_MS)),
+              "starts_a_day_late": dict(data=(lo + DAY_MS, hi - MINUTE_MS)),
               "unknown_kind": dict(edit=lambda m: m["series"][0].pop("kind"))}[which]
         add_set_inputs(repo, "doge_2024", **kw)
         code, stub = run_oos(repo)
         needle = "is not one of" if which == "unknown_kind" else "does not cover the set's window"
         assert_refused(repo, "doge_2024", code, stub, messages, needle)
 
-    @pytest.mark.parametrize("missing", [5, 59])
-    def test_a_few_bars_missing_at_either_edge_are_accepted(self, tmp_path, messages, missing):
+    @pytest.mark.parametrize("funding", ["ends_two_days_early", "ends_a_month_early", "starts_a_week_late"])
+    def test_a_short_optional_series_is_logged_not_refused(self, tmp_path, messages, funding):
+        # §4.2 / §6.8: funding (or a spot leg) the exchange no longer has leaves
+        # its cells undefined there or untestable; it does not refuse the set.
+        repo = build(tmp_path, manifest=False)
+        lo, hi = ro.manifest_window_required("doge_2024")
+        span = {"ends_two_days_early": (lo + 4 * P.HOUR_MS, hi - 2 * DAY_MS - 4 * P.HOUR_MS),
+                "ends_a_month_early": (lo + 4 * P.HOUR_MS, hi - 30 * DAY_MS),
+                "starts_a_week_late": (lo + 7 * DAY_MS, hi - 4 * P.HOUR_MS)}[funding]
+        add_set_inputs(repo, "doge_2024", funding=span)
+        code, _ = run_oos(repo)
+        assert code == ro.EXIT_OK, joined(messages)
+        assert "an optional input" in joined(messages)
+
+    @pytest.mark.parametrize("missing", [5, 59, 6 * 60, 24 * 60 - 1])
+    def test_bars_missing_at_either_edge_for_less_than_a_day_are_accepted(self, tmp_path, messages, missing):
         # Missing bars are gaps, which §4.2 handles (the incomplete bucket is
-        # dropped); refusing them in code frozen at the tag could not be undone.
+        # dropped), even hours of them where OKX had an outage on a window's
+        # edge; refusing them in code frozen at the tag could not be undone.
         repo = build(tmp_path, manifest=False)
         lo, hi = ro.manifest_window_required("doge_2024")
         add_set_inputs(repo, "doge_2024", data=(lo + missing * MINUTE_MS, hi - MINUTE_MS - missing * MINUTE_MS))
@@ -1068,6 +1082,7 @@ class TestManifest:
                        edit=lambda m: m.update(remote_url="file://" + freeze.PUBLIC_REMOTE))   # another spelling
         code, _ = run_oos(repo)
         assert code == ro.EXIT_OK, joined(messages)
+        assert "an optional input" not in joined(messages)
 
     @pytest.mark.parametrize("case", ["no_remote_url", "fork", "no_main_commit", "main_before_amendment",
                                       "unknown_commit"])
@@ -1086,18 +1101,34 @@ class TestManifest:
         needle = "records remote_url" if case in ("no_remote_url", "fork") else "records remote_main_commit"
         assert_refused(repo, "doge_2024", code, stub, messages, needle)
 
-    def test_the_public_main_at_fetch_time_holds_the_amendments_last_change(self, tmp_path, messages):
-        # The amendment was edited and pushed again after the data was fetched:
-        # the main branch fetch_v2 saw held only its first version.
+    def test_the_amendments_prose_may_change_after_the_data_was_fetched(self, tmp_path, messages):
+        # A Software Heritage id filled in (§10 step 3) or a typo fixed after the
+        # download: the main branch fetch_v2 saw held the same freeze blocks.
         repo = build(tmp_path, manifest=False)
         at_fetch = repo.git("rev-parse", "refs/remotes/origin/main")
         path = repo.path / "docs/preregistration-freeze.md"
         path.write_text(path.read_text().replace("Prose.", "Prose, edited after the data was fetched."))
-        repo.commit("edit the amendment")
+        repo.commit("edit the amendment's prose")
         repo.push()                                                       # verify_freeze is satisfied
         add_set_inputs(repo, "doge_2024", edit=lambda m: m.update(remote_main_commit=at_fetch))
+        code, _ = run_oos(repo)
+        assert code == ro.EXIT_OK, joined(messages)
+
+    def test_the_public_main_at_fetch_time_holds_the_freeze_blocks_in_force(self, tmp_path, messages):
+        # A block rewritten after the download, even to a value verify_freeze
+        # still accepts (an MDE re-typed within its tolerance), is not what was
+        # public when the data was fetched.
+        repo = build(tmp_path, manifest=False)
+        at_fetch = repo.git("rev-parse", "refs/remotes/origin/main")
+        path = repo.path / "docs/preregistration-freeze.md"
+        text = path.read_text()
+        assert ",3.986\n" in text
+        path.write_text(text.replace(",3.986\n", ",3.9860\n", 1))
+        repo.commit("re-type an MDE in the amendment")
+        repo.push()
+        add_set_inputs(repo, "doge_2024", edit=lambda m: m.update(remote_main_commit=at_fetch))
         code, stub = run_oos(repo)
-        assert_refused(repo, "doge_2024", code, stub, messages, "records remote_main_commit")
+        assert_refused(repo, "doge_2024", code, stub, messages, "does not hold the freeze blocks in force")
 
     def test_manifest_committed_but_not_pushed(self, tmp_path, messages):
         repo = build(tmp_path, manifest=False)

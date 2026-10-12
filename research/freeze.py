@@ -242,6 +242,15 @@ def _blocks(text: str) -> Dict[str, List[str]]:
     return out
 
 
+def freeze_blocks(text: str) -> Dict[str, List[str]]:
+    """
+    The amendment's machine-readable blocks by name, as text: everything a run
+    reads from it. Two versions with the same blocks record the same freeze,
+    whatever their prose says.
+    """
+    return _blocks(text)
+
+
 def parse_freeze_amendment(text: str, spec: Optional[Dict[str, Any]] = None) -> FreezeRecord:
     """
     The freeze commit and the 60 frozen cells from the amendment's text.
@@ -363,11 +372,13 @@ def amendment_missing_from(root: Path, commit: str, where: str, spec: Optional[D
     None if the commit that last changed the amendment is an ancestor of
     ``commit``; otherwise why not, naming ``commit`` as ``where``.
 
-    Three checks ask this of a different ``commit``: verify_freeze of
-    REMOTE_MAIN, fetch_v2 of the main branch the public repository reports,
-    and run_oos of the main branch a manifest says fetch_v2 saw. The last
-    change rather than the first is asked for, so an edit made after a push
-    does not ride on the earlier push.
+    Two checks ask this of a different ``commit``: verify_freeze of
+    REMOTE_MAIN, and fetch_v2 of the main branch the public repository
+    reports. The last change rather than the first is asked for, so an edit
+    made after a push does not ride on the earlier push. (run_oos asks less
+    of the main branch a manifest says fetch_v2 saw: only that it held the
+    freeze blocks in force, freeze_blocks, so the amendment's prose may
+    change after a download.)
     """
     amendment = (spec or get_spec())["freeze"]["amendment_file"]
     last = gitrepo.commits_touching(root, amendment)[:1]
@@ -482,6 +493,6 @@ __all__ = [
     "CellKey", "INSAMPLE_COLUMNS", "FREEZE_TABLE_COLUMNS", "REMOTE_MAIN", "PUBLIC_REMOTE",
     "normalize_remote", "is_public_remote", "FreezeFormatError",
     "FreezeNotVerified", "FrozenCell", "FreezeRecord", "expected_cells", "parse_insample_csv",
-    "parse_freeze_amendment", "compare_with_insample", "render_amendment_blocks",
+    "freeze_blocks", "parse_freeze_amendment", "compare_with_insample", "render_amendment_blocks",
     "amendment_missing_from", "verify_freeze",
 ]
