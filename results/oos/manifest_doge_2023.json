@@ -1,0 +1,3573 @@
+{
+  "manifest_version": 1,
+  "tool": "scripts/fetch_v2.py",
+  "kind": "candles+funding",
+  "window": {
+    "start_ms": 1687723200000,
+    "end_ms": 1727121600000,
+    "start_utc": "2023-06-25 20:00",
+    "end_utc": "2024-09-23 20:00",
+    "half_open": true
+  },
+  "overlaps_protected": true,
+  "test_data_unlocked": true,
+  "remote_url": "https://github.com/ikunfloyd/crypto-factor-validation.git",
+  "remote_main_commit": "6b9c5488a0ccf6589c98f553e1561464cc2c450b",
+  "created_utc": "2026-10-12T10:43:33Z",
+  "requests": 4396,
+  "series": [
+    {
+      "path": "data/history/oos/doge_2023/DOGE-USDT-SWAP/candles_1m.parquet",
+      "rows": 656640,
+      "first_ts": 1687723200000,
+      "last_ts": 1727121540000,
+      "step_ms": 60000,
+      "gaps": [],
+      "sha256": "844dd2324ddddc47a8d69c655cb045b2619bf3b0b352bc46c6cb553cdca45c78",
+      "source_by_day": {
+        "2023-06-25": "rest_history_candles",
+        "2023-06-26": "rest_history_candles",
+        "2023-06-27": "rest_history_candles",
+        "2023-06-28": "rest_history_candles",
+        "2023-06-29": "rest_history_candles",
+        "2023-06-30": "rest_history_candles",
+        "2023-07-01": "rest_history_candles",
+        "2023-07-02": "rest_history_candles",
+        "2023-07-03": "rest_history_candles",
+        "2023-07-04": "rest_history_candles",
+        "2023-07-05": "rest_history_candles",
+        "2023-07-06": "rest_history_candles",
+        "2023-07-07": "rest_history_candles",
+        "2023-07-08": "rest_history_candles",
+        "2023-07-09": "rest_history_candles",
+        "2023-07-10": "rest_history_candles",
+        "2023-07-11": "rest_history_candles",
+        "2023-07-12": "rest_history_candles",
+        "2023-07-13": "rest_history_candles",
+        "2023-07-14": "rest_history_candles",
+        "2023-07-15": "rest_history_candles",
+        "2023-07-16": "rest_history_candles",
+        "2023-07-17": "rest_history_candles",
+        "2023-07-18": "rest_history_candles",
+        "2023-07-19": "rest_history_candles",
+        "2023-07-20": "rest_history_candles",
+        "2023-07-21": "rest_history_candles",
+        "2023-07-22": "rest_history_candles",
+        "2023-07-23": "rest_history_candles",
+        "2023-07-24": "rest_history_candles",
+        "2023-07-25": "rest_history_candles",
+        "2023-07-26": "rest_history_candles",
+        "2023-07-27": "rest_history_candles",
+        "2023-07-28": "rest_history_candles",
+        "2023-07-29": "rest_history_candles",
+        "2023-07-30": "rest_history_candles",
+        "2023-07-31": "rest_history_candles",
+        "2023-08-01": "rest_history_candles",
+        "2023-08-02": "rest_history_candles",
+        "2023-08-03": "rest_history_candles",
+        "2023-08-04": "rest_history_candles",
+        "2023-08-05": "rest_history_candles",
+        "2023-08-06": "rest_history_candles",
+        "2023-08-07": "rest_history_candles",
+        "2023-08-08": "rest_history_candles",
+        "2023-08-09": "rest_history_candles",
+        "2023-08-10": "rest_history_candles",
+        "2023-08-11": "rest_history_candles",
+        "2023-08-12": "rest_history_candles",
+        "2023-08-13": "rest_history_candles",
+        "2023-08-14": "rest_history_candles",
+        "2023-08-15": "rest_history_candles",
+        "2023-08-16": "rest_history_candles",
+        "2023-08-17": "rest_history_candles",
+        "2023-08-18": "rest_history_candles",
+        "2023-08-19": "rest_history_candles",
+        "2023-08-20": "rest_history_candles",
+        "2023-08-21": "rest_history_candles",
+        "2023-08-22": "rest_history_candles",
+        "2023-08-23": "rest_history_candles",
+        "2023-08-24": "rest_history_candles",
+        "2023-08-25": "rest_history_candles",
+        "2023-08-26": "rest_history_candles",
+        "2023-08-27": "rest_history_candles",
+        "2023-08-28": "rest_history_candles",
+        "2023-08-29": "rest_history_candles",
+        "2023-08-30": "rest_history_candles",
+        "2023-08-31": "rest_history_candles",
+        "2023-09-01": "rest_history_candles",
+        "2023-09-02": "rest_history_candles",
+        "2023-09-03": "rest_history_candles",
+        "2023-09-04": "rest_history_candles",
+        "2023-09-05": "rest_history_candles",
+        "2023-09-06": "rest_history_candles",
+        "2023-09-07": "rest_history_candles",
+        "2023-09-08": "rest_history_candles",
+        "2023-09-09": "rest_history_candles",
+        "2023-09-10": "rest_history_candles",
+        "2023-09-11": "rest_history_candles",
+        "2023-09-12": "rest_history_candles",
+        "2023-09-13": "rest_history_candles",
+        "2023-09-14": "rest_history_candles",
+        "2023-09-15": "rest_history_candles",
+        "2023-09-16": "rest_history_candles",
+        "2023-09-17": "rest_history_candles",
+        "2023-09-18": "rest_history_candles",
+        "2023-09-19": "rest_history_candles",
+        "2023-09-20": "rest_history_candles",
+        "2023-09-21": "rest_history_candles",
+        "2023-09-22": "rest_history_candles",
+        "2023-09-23": "rest_history_candles",
+        "2023-09-24": "rest_history_candles",
+        "2023-09-25": "rest_history_candles",
+        "2023-09-26": "rest_history_candles",
+        "2023-09-27": "rest_history_candles",
+        "2023-09-28": "rest_history_candles",
+        "2023-09-29": "rest_history_candles",
+        "2023-09-30": "rest_history_candles",
+        "2023-10-01": "rest_history_candles",
+        "2023-10-02": "rest_history_candles",
+        "2023-10-03": "rest_history_candles",
+        "2023-10-04": "rest_history_candles",
+        "2023-10-05": "rest_history_candles",
+        "2023-10-06": "rest_history_candles",
+        "2023-10-07": "rest_history_candles",
+        "2023-10-08": "rest_history_candles",
+        "2023-10-09": "rest_history_candles",
+        "2023-10-10": "rest_history_candles",
+        "2023-10-11": "rest_history_candles",
+        "2023-10-12": "rest_history_candles",
+        "2023-10-13": "rest_history_candles",
+        "2023-10-14": "rest_history_candles",
+        "2023-10-15": "rest_history_candles",
+        "2023-10-16": "rest_history_candles",
+        "2023-10-17": "rest_history_candles",
+        "2023-10-18": "rest_history_candles",
+        "2023-10-19": "rest_history_candles",
+        "2023-10-20": "rest_history_candles",
+        "2023-10-21": "rest_history_candles",
+        "2023-10-22": "rest_history_candles",
+        "2023-10-23": "rest_history_candles",
+        "2023-10-24": "rest_history_candles",
+        "2023-10-25": "rest_history_candles",
+        "2023-10-26": "rest_history_candles",
+        "2023-10-27": "rest_history_candles",
+        "2023-10-28": "rest_history_candles",
+        "2023-10-29": "rest_history_candles",
+        "2023-10-30": "rest_history_candles",
+        "2023-10-31": "rest_history_candles",
+        "2023-11-01": "rest_history_candles",
+        "2023-11-02": "rest_history_candles",
+        "2023-11-03": "rest_history_candles",
+        "2023-11-04": "rest_history_candles",
+        "2023-11-05": "rest_history_candles",
+        "2023-11-06": "rest_history_candles",
+        "2023-11-07": "rest_history_candles",
+        "2023-11-08": "rest_history_candles",
+        "2023-11-09": "rest_history_candles",
+        "2023-11-10": "rest_history_candles",
+        "2023-11-11": "rest_history_candles",
+        "2023-11-12": "rest_history_candles",
+        "2023-11-13": "rest_history_candles",
+        "2023-11-14": "rest_history_candles",
+        "2023-11-15": "rest_history_candles",
+        "2023-11-16": "rest_history_candles",
+        "2023-11-17": "rest_history_candles",
+        "2023-11-18": "rest_history_candles",
+        "2023-11-19": "rest_history_candles",
+        "2023-11-20": "rest_history_candles",
+        "2023-11-21": "rest_history_candles",
+        "2023-11-22": "rest_history_candles",
+        "2023-11-23": "rest_history_candles",
+        "2023-11-24": "rest_history_candles",
+        "2023-11-25": "rest_history_candles",
+        "2023-11-26": "rest_history_candles",
+        "2023-11-27": "rest_history_candles",
+        "2023-11-28": "rest_history_candles",
+        "2023-11-29": "rest_history_candles",
+        "2023-11-30": "rest_history_candles",
+        "2023-12-01": "rest_history_candles",
+        "2023-12-02": "rest_history_candles",
+        "2023-12-03": "rest_history_candles",
+        "2023-12-04": "rest_history_candles",
+        "2023-12-05": "rest_history_candles",
+        "2023-12-06": "rest_history_candles",
+        "2023-12-07": "rest_history_candles",
+        "2023-12-08": "rest_history_candles",
+        "2023-12-09": "rest_history_candles",
+        "2023-12-10": "rest_history_candles",
+        "2023-12-11": "rest_history_candles",
+        "2023-12-12": "rest_history_candles",
+        "2023-12-13": "rest_history_candles",
+        "2023-12-14": "rest_history_candles",
+        "2023-12-15": "rest_history_candles",
+        "2023-12-16": "rest_history_candles",
+        "2023-12-17": "rest_history_candles",
+        "2023-12-18": "rest_history_candles",
+        "2023-12-19": "rest_history_candles",
+        "2023-12-20": "rest_history_candles",
+        "2023-12-21": "rest_history_candles",
+        "2023-12-22": "rest_history_candles",
+        "2023-12-23": "rest_history_candles",
+        "2023-12-24": "rest_history_candles",
+        "2023-12-25": "rest_history_candles",
+        "2023-12-26": "rest_history_candles",
+        "2023-12-27": "rest_history_candles",
+        "2023-12-28": "rest_history_candles",
+        "2023-12-29": "rest_history_candles",
+        "2023-12-30": "rest_history_candles",
+        "2023-12-31": "rest_history_candles",
+        "2024-01-01": "rest_history_candles",
+        "2024-01-02": "rest_history_candles",
+        "2024-01-03": "rest_history_candles",
+        "2024-01-04": "rest_history_candles",
+        "2024-01-05": "rest_history_candles",
+        "2024-01-06": "rest_history_candles",
+        "2024-01-07": "rest_history_candles",
+        "2024-01-08": "rest_history_candles",
+        "2024-01-09": "rest_history_candles",
+        "2024-01-10": "rest_history_candles",
+        "2024-01-11": "rest_history_candles",
+        "2024-01-12": "rest_history_candles",
+        "2024-01-13": "rest_history_candles",
+        "2024-01-14": "rest_history_candles",
+        "2024-01-15": "rest_history_candles",
+        "2024-01-16": "rest_history_candles",
+        "2024-01-17": "rest_history_candles",
+        "2024-01-18": "rest_history_candles",
+        "2024-01-19": "rest_history_candles",
+        "2024-01-20": "rest_history_candles",
+        "2024-01-21": "rest_history_candles",
+        "2024-01-22": "rest_history_candles",
+        "2024-01-23": "rest_history_candles",
+        "2024-01-24": "rest_history_candles",
+        "2024-01-25": "rest_history_candles",
+        "2024-01-26": "rest_history_candles",
+        "2024-01-27": "rest_history_candles",
+        "2024-01-28": "rest_history_candles",
+        "2024-01-29": "rest_history_candles",
+        "2024-01-30": "rest_history_candles",
+        "2024-01-31": "rest_history_candles",
+        "2024-02-01": "rest_history_candles",
+        "2024-02-02": "rest_history_candles",
+        "2024-02-03": "rest_history_candles",
+        "2024-02-04": "rest_history_candles",
+        "2024-02-05": "rest_history_candles",
+        "2024-02-06": "rest_history_candles",
+        "2024-02-07": "rest_history_candles",
+        "2024-02-08": "rest_history_candles",
+        "2024-02-09": "rest_history_candles",
+        "2024-02-10": "rest_history_candles",
+        "2024-02-11": "rest_history_candles",
+        "2024-02-12": "rest_history_candles",
+        "2024-02-13": "rest_history_candles",
+        "2024-02-14": "rest_history_candles",
+        "2024-02-15": "rest_history_candles",
+        "2024-02-16": "rest_history_candles",
+        "2024-02-17": "rest_history_candles",
+        "2024-02-18": "rest_history_candles",
+        "2024-02-19": "rest_history_candles",
+        "2024-02-20": "rest_history_candles",
+        "2024-02-21": "rest_history_candles",
+        "2024-02-22": "rest_history_candles",
+        "2024-02-23": "rest_history_candles",
+        "2024-02-24": "rest_history_candles",
+        "2024-02-25": "rest_history_candles",
+        "2024-02-26": "rest_history_candles",
+        "2024-02-27": "rest_history_candles",
+        "2024-02-28": "rest_history_candles",
+        "2024-02-29": "rest_history_candles",
+        "2024-03-01": "rest_history_candles",
+        "2024-03-02": "rest_history_candles",
+        "2024-03-03": "rest_history_candles",
+        "2024-03-04": "rest_history_candles",
+        "2024-03-05": "rest_history_candles",
+        "2024-03-06": "rest_history_candles",
+        "2024-03-07": "rest_history_candles",
+        "2024-03-08": "rest_history_candles",
+        "2024-03-09": "rest_history_candles",
+        "2024-03-10": "rest_history_candles",
+        "2024-03-11": "rest_history_candles",
+        "2024-03-12": "rest_history_candles",
+        "2024-03-13": "rest_history_candles",
+        "2024-03-14": "rest_history_candles",
+        "2024-03-15": "rest_history_candles",
+        "2024-03-16": "rest_history_candles",
+        "2024-03-17": "rest_history_candles",
+        "2024-03-18": "rest_history_candles",
+        "2024-03-19": "rest_history_candles",
+        "2024-03-20": "rest_history_candles",
+        "2024-03-21": "rest_history_candles",
+        "2024-03-22": "rest_history_candles",
+        "2024-03-23": "rest_history_candles",
+        "2024-03-24": "rest_history_candles",
+        "2024-03-25": "rest_history_candles",
+        "2024-03-26": "rest_history_candles",
+        "2024-03-27": "rest_history_candles",
+        "2024-03-28": "rest_history_candles",
+        "2024-03-29": "rest_history_candles",
+        "2024-03-30": "rest_history_candles",
+        "2024-03-31": "rest_history_candles",
+        "2024-04-01": "rest_history_candles",
+        "2024-04-02": "rest_history_candles",
+        "2024-04-03": "rest_history_candles",
+        "2024-04-04": "rest_history_candles",
+        "2024-04-05": "rest_history_candles",
+        "2024-04-06": "rest_history_candles",
+        "2024-04-07": "rest_history_candles",
+        "2024-04-08": "rest_history_candles",
+        "2024-04-09": "rest_history_candles",
+        "2024-04-10": "rest_history_candles",
+        "2024-04-11": "rest_history_candles",
+        "2024-04-12": "rest_history_candles",
+        "2024-04-13": "rest_history_candles",
+        "2024-04-14": "rest_history_candles",
+        "2024-04-15": "rest_history_candles",
+        "2024-04-16": "rest_history_candles",
+        "2024-04-17": "rest_history_candles",
+        "2024-04-18": "rest_history_candles",
+        "2024-04-19": "rest_history_candles",
+        "2024-04-20": "rest_history_candles",
+        "2024-04-21": "rest_history_candles",
+        "2024-04-22": "rest_history_candles",
+        "2024-04-23": "rest_history_candles",
+        "2024-04-24": "rest_history_candles",
+        "2024-04-25": "rest_history_candles",
+        "2024-04-26": "rest_history_candles",
+        "2024-04-27": "rest_history_candles",
+        "2024-04-28": "rest_history_candles",
+        "2024-04-29": "rest_history_candles",
+        "2024-04-30": "rest_history_candles",
+        "2024-05-01": "rest_history_candles",
+        "2024-05-02": "rest_history_candles",
+        "2024-05-03": "rest_history_candles",
+        "2024-05-04": "rest_history_candles",
+        "2024-05-05": "rest_history_candles",
+        "2024-05-06": "rest_history_candles",
+        "2024-05-07": "rest_history_candles",
+        "2024-05-08": "rest_history_candles",
+        "2024-05-09": "rest_history_candles",
+        "2024-05-10": "rest_history_candles",
+        "2024-05-11": "rest_history_candles",
+        "2024-05-12": "rest_history_candles",
+        "2024-05-13": "rest_history_candles",
+        "2024-05-14": "rest_history_candles",
+        "2024-05-15": "rest_history_candles",
+        "2024-05-16": "rest_history_candles",
+        "2024-05-17": "rest_history_candles",
+        "2024-05-18": "rest_history_candles",
+        "2024-05-19": "rest_history_candles",
+        "2024-05-20": "rest_history_candles",
+        "2024-05-21": "rest_history_candles",
+        "2024-05-22": "rest_history_candles",
+        "2024-05-23": "rest_history_candles",
+        "2024-05-24": "rest_history_candles",
+        "2024-05-25": "rest_history_candles",
+        "2024-05-26": "rest_history_candles",
+        "2024-05-27": "rest_history_candles",
+        "2024-05-28": "rest_history_candles",
+        "2024-05-29": "rest_history_candles",
+        "2024-05-30": "rest_history_candles",
+        "2024-05-31": "rest_history_candles",
+        "2024-06-01": "rest_history_candles",
+        "2024-06-02": "rest_history_candles",
+        "2024-06-03": "rest_history_candles",
+        "2024-06-04": "rest_history_candles",
+        "2024-06-05": "rest_history_candles",
+        "2024-06-06": "rest_history_candles",
+        "2024-06-07": "rest_history_candles",
+        "2024-06-08": "rest_history_candles",
+        "2024-06-09": "rest_history_candles",
+        "2024-06-10": "rest_history_candles",
+        "2024-06-11": "rest_history_candles",
+        "2024-06-12": "rest_history_candles",
+        "2024-06-13": "rest_history_candles",
+        "2024-06-14": "rest_history_candles",
+        "2024-06-15": "rest_history_candles",
+        "2024-06-16": "rest_history_candles",
+        "2024-06-17": "rest_history_candles",
+        "2024-06-18": "rest_history_candles",
+        "2024-06-19": "rest_history_candles",
+        "2024-06-20": "rest_history_candles",
+        "2024-06-21": "rest_history_candles",
+        "2024-06-22": "rest_history_candles",
+        "2024-06-23": "rest_history_candles",
+        "2024-06-24": "rest_history_candles",
+        "2024-06-25": "rest_history_candles",
+        "2024-06-26": "rest_history_candles",
+        "2024-06-27": "rest_history_candles",
+        "2024-06-28": "rest_history_candles",
+        "2024-06-29": "rest_history_candles",
+        "2024-06-30": "rest_history_candles",
+        "2024-07-01": "rest_history_candles",
+        "2024-07-02": "rest_history_candles",
+        "2024-07-03": "rest_history_candles",
+        "2024-07-04": "rest_history_candles",
+        "2024-07-05": "rest_history_candles",
+        "2024-07-06": "rest_history_candles",
+        "2024-07-07": "rest_history_candles",
+        "2024-07-08": "rest_history_candles",
+        "2024-07-09": "rest_history_candles",
+        "2024-07-10": "rest_history_candles",
+        "2024-07-11": "rest_history_candles",
+        "2024-07-12": "rest_history_candles",
+        "2024-07-13": "rest_history_candles",
+        "2024-07-14": "rest_history_candles",
+        "2024-07-15": "rest_history_candles",
+        "2024-07-16": "rest_history_candles",
+        "2024-07-17": "rest_history_candles",
+        "2024-07-18": "rest_history_candles",
+        "2024-07-19": "rest_history_candles",
+        "2024-07-20": "rest_history_candles",
+        "2024-07-21": "rest_history_candles",
+        "2024-07-22": "rest_history_candles",
+        "2024-07-23": "rest_history_candles",
+        "2024-07-24": "rest_history_candles",
+        "2024-07-25": "rest_history_candles",
+        "2024-07-26": "rest_history_candles",
+        "2024-07-27": "rest_history_candles",
+        "2024-07-28": "rest_history_candles",
+        "2024-07-29": "rest_history_candles",
+        "2024-07-30": "rest_history_candles",
+        "2024-07-31": "rest_history_candles",
+        "2024-08-01": "rest_history_candles",
+        "2024-08-02": "rest_history_candles",
+        "2024-08-03": "rest_history_candles",
+        "2024-08-04": "rest_history_candles",
+        "2024-08-05": "rest_history_candles",
+        "2024-08-06": "rest_history_candles",
+        "2024-08-07": "rest_history_candles",
+        "2024-08-08": "rest_history_candles",
+        "2024-08-09": "rest_history_candles",
+        "2024-08-10": "rest_history_candles",
+        "2024-08-11": "rest_history_candles",
+        "2024-08-12": "rest_history_candles",
+        "2024-08-13": "rest_history_candles",
+        "2024-08-14": "rest_history_candles",
+        "2024-08-15": "rest_history_candles",
+        "2024-08-16": "rest_history_candles",
+        "2024-08-17": "rest_history_candles",
+        "2024-08-18": "rest_history_candles",
+        "2024-08-19": "rest_history_candles",
+        "2024-08-20": "rest_history_candles",
+        "2024-08-21": "rest_history_candles",
+        "2024-08-22": "rest_history_candles",
+        "2024-08-23": "rest_history_candles",
+        "2024-08-24": "rest_history_candles",
+        "2024-08-25": "rest_history_candles",
+        "2024-08-26": "rest_history_candles",
+        "2024-08-27": "rest_history_candles",
+        "2024-08-28": "rest_history_candles",
+        "2024-08-29": "rest_history_candles",
+        "2024-08-30": "rest_history_candles",
+        "2024-08-31": "rest_history_candles",
+        "2024-09-01": "rest_history_candles",
+        "2024-09-02": "rest_history_candles",
+        "2024-09-03": "rest_history_candles",
+        "2024-09-04": "rest_history_candles",
+        "2024-09-05": "rest_history_candles",
+        "2024-09-06": "rest_history_candles",
+        "2024-09-07": "rest_history_candles",
+        "2024-09-08": "rest_history_candles",
+        "2024-09-09": "rest_history_candles",
+        "2024-09-10": "rest_history_candles",
+        "2024-09-11": "rest_history_candles",
+        "2024-09-12": "rest_history_candles",
+        "2024-09-13": "rest_history_candles",
+        "2024-09-14": "rest_history_candles",
+        "2024-09-15": "rest_history_candles",
+        "2024-09-16": "rest_history_candles",
+        "2024-09-17": "rest_history_candles",
+        "2024-09-18": "rest_history_candles",
+        "2024-09-19": "rest_history_candles",
+        "2024-09-20": "rest_history_candles",
+        "2024-09-21": "rest_history_candles",
+        "2024-09-22": "rest_history_candles",
+        "2024-09-23": "rest_history_candles"
+      },
+      "inst_id": "DOGE-USDT-SWAP",
+      "kind": "candles",
+      "columns": [
+        "timestamp",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "volume_ccy"
+      ],
+      "edge_gaps": [],
+      "pages": 2189,
+      "unconfirmed_dropped": 0,
+      "served_outside_window": 0,
+      "duplicate_conflicts": 0,
+      "off_grid_rows": 0,
+      "no_data_before_ms": null
+    },
+    {
+      "path": "data/history/oos/doge_2023/DOGE-USDT/candles_1m.parquet",
+      "rows": 656640,
+      "first_ts": 1687723200000,
+      "last_ts": 1727121540000,
+      "step_ms": 60000,
+      "gaps": [],
+      "sha256": "989076189d8becaa4b524393171b6f8c201e2efd0e5fcb4fe03ef2471cc96762",
+      "source_by_day": {
+        "2023-06-25": "rest_history_candles",
+        "2023-06-26": "rest_history_candles",
+        "2023-06-27": "rest_history_candles",
+        "2023-06-28": "rest_history_candles",
+        "2023-06-29": "rest_history_candles",
+        "2023-06-30": "rest_history_candles",
+        "2023-07-01": "rest_history_candles",
+        "2023-07-02": "rest_history_candles",
+        "2023-07-03": "rest_history_candles",
+        "2023-07-04": "rest_history_candles",
+        "2023-07-05": "rest_history_candles",
+        "2023-07-06": "rest_history_candles",
+        "2023-07-07": "rest_history_candles",
+        "2023-07-08": "rest_history_candles",
+        "2023-07-09": "rest_history_candles",
+        "2023-07-10": "rest_history_candles",
+        "2023-07-11": "rest_history_candles",
+        "2023-07-12": "rest_history_candles",
+        "2023-07-13": "rest_history_candles",
+        "2023-07-14": "rest_history_candles",
+        "2023-07-15": "rest_history_candles",
+        "2023-07-16": "rest_history_candles",
+        "2023-07-17": "rest_history_candles",
+        "2023-07-18": "rest_history_candles",
+        "2023-07-19": "rest_history_candles",
+        "2023-07-20": "rest_history_candles",
+        "2023-07-21": "rest_history_candles",
+        "2023-07-22": "rest_history_candles",
+        "2023-07-23": "rest_history_candles",
+        "2023-07-24": "rest_history_candles",
+        "2023-07-25": "rest_history_candles",
+        "2023-07-26": "rest_history_candles",
+        "2023-07-27": "rest_history_candles",
+        "2023-07-28": "rest_history_candles",
+        "2023-07-29": "rest_history_candles",
+        "2023-07-30": "rest_history_candles",
+        "2023-07-31": "rest_history_candles",
+        "2023-08-01": "rest_history_candles",
+        "2023-08-02": "rest_history_candles",
+        "2023-08-03": "rest_history_candles",
+        "2023-08-04": "rest_history_candles",
+        "2023-08-05": "rest_history_candles",
+        "2023-08-06": "rest_history_candles",
+        "2023-08-07": "rest_history_candles",
+        "2023-08-08": "rest_history_candles",
+        "2023-08-09": "rest_history_candles",
+        "2023-08-10": "rest_history_candles",
+        "2023-08-11": "rest_history_candles",
+        "2023-08-12": "rest_history_candles",
+        "2023-08-13": "rest_history_candles",
+        "2023-08-14": "rest_history_candles",
+        "2023-08-15": "rest_history_candles",
+        "2023-08-16": "rest_history_candles",
+        "2023-08-17": "rest_history_candles",
+        "2023-08-18": "rest_history_candles",
+        "2023-08-19": "rest_history_candles",
+        "2023-08-20": "rest_history_candles",
+        "2023-08-21": "rest_history_candles",
+        "2023-08-22": "rest_history_candles",
+        "2023-08-23": "rest_history_candles",
+        "2023-08-24": "rest_history_candles",
+        "2023-08-25": "rest_history_candles",
+        "2023-08-26": "rest_history_candles",
+        "2023-08-27": "rest_history_candles",
+        "2023-08-28": "rest_history_candles",
+        "2023-08-29": "rest_history_candles",
+        "2023-08-30": "rest_history_candles",
+        "2023-08-31": "rest_history_candles",
+        "2023-09-01": "rest_history_candles",
+        "2023-09-02": "rest_history_candles",
+        "2023-09-03": "rest_history_candles",
+        "2023-09-04": "rest_history_candles",
+        "2023-09-05": "rest_history_candles",
+        "2023-09-06": "rest_history_candles",
+        "2023-09-07": "rest_history_candles",
+        "2023-09-08": "rest_history_candles",
+        "2023-09-09": "rest_history_candles",
+        "2023-09-10": "rest_history_candles",
+        "2023-09-11": "rest_history_candles",
+        "2023-09-12": "rest_history_candles",
+        "2023-09-13": "rest_history_candles",
+        "2023-09-14": "rest_history_candles",
+        "2023-09-15": "rest_history_candles",
+        "2023-09-16": "rest_history_candles",
+        "2023-09-17": "rest_history_candles",
+        "2023-09-18": "rest_history_candles",
+        "2023-09-19": "rest_history_candles",
+        "2023-09-20": "rest_history_candles",
+        "2023-09-21": "rest_history_candles",
+        "2023-09-22": "rest_history_candles",
+        "2023-09-23": "rest_history_candles",
+        "2023-09-24": "rest_history_candles",
+        "2023-09-25": "rest_history_candles",
+        "2023-09-26": "rest_history_candles",
+        "2023-09-27": "rest_history_candles",
+        "2023-09-28": "rest_history_candles",
+        "2023-09-29": "rest_history_candles",
+        "2023-09-30": "rest_history_candles",
+        "2023-10-01": "rest_history_candles",
+        "2023-10-02": "rest_history_candles",
+        "2023-10-03": "rest_history_candles",
+        "2023-10-04": "rest_history_candles",
+        "2023-10-05": "rest_history_candles",
+        "2023-10-06": "rest_history_candles",
+        "2023-10-07": "rest_history_candles",
+        "2023-10-08": "rest_history_candles",
+        "2023-10-09": "rest_history_candles",
+        "2023-10-10": "rest_history_candles",
+        "2023-10-11": "rest_history_candles",
+        "2023-10-12": "rest_history_candles",
+        "2023-10-13": "rest_history_candles",
+        "2023-10-14": "rest_history_candles",
+        "2023-10-15": "rest_history_candles",
+        "2023-10-16": "rest_history_candles",
+        "2023-10-17": "rest_history_candles",
+        "2023-10-18": "rest_history_candles",
+        "2023-10-19": "rest_history_candles",
+        "2023-10-20": "rest_history_candles",
+        "2023-10-21": "rest_history_candles",
+        "2023-10-22": "rest_history_candles",
+        "2023-10-23": "rest_history_candles",
+        "2023-10-24": "rest_history_candles",
+        "2023-10-25": "rest_history_candles",
+        "2023-10-26": "rest_history_candles",
+        "2023-10-27": "rest_history_candles",
+        "2023-10-28": "rest_history_candles",
+        "2023-10-29": "rest_history_candles",
+        "2023-10-30": "rest_history_candles",
+        "2023-10-31": "rest_history_candles",
+        "2023-11-01": "rest_history_candles",
+        "2023-11-02": "rest_history_candles",
+        "2023-11-03": "rest_history_candles",
+        "2023-11-04": "rest_history_candles",
+        "2023-11-05": "rest_history_candles",
+        "2023-11-06": "rest_history_candles",
+        "2023-11-07": "rest_history_candles",
+        "2023-11-08": "rest_history_candles",
+        "2023-11-09": "rest_history_candles",
+        "2023-11-10": "rest_history_candles",
+        "2023-11-11": "rest_history_candles",
+        "2023-11-12": "rest_history_candles",
+        "2023-11-13": "rest_history_candles",
+        "2023-11-14": "rest_history_candles",
+        "2023-11-15": "rest_history_candles",
+        "2023-11-16": "rest_history_candles",
+        "2023-11-17": "rest_history_candles",
+        "2023-11-18": "rest_history_candles",
+        "2023-11-19": "rest_history_candles",
+        "2023-11-20": "rest_history_candles",
+        "2023-11-21": "rest_history_candles",
+        "2023-11-22": "rest_history_candles",
+        "2023-11-23": "rest_history_candles",
+        "2023-11-24": "rest_history_candles",
+        "2023-11-25": "rest_history_candles",
+        "2023-11-26": "rest_history_candles",
+        "2023-11-27": "rest_history_candles",
+        "2023-11-28": "rest_history_candles",
+        "2023-11-29": "rest_history_candles",
+        "2023-11-30": "rest_history_candles",
+        "2023-12-01": "rest_history_candles",
+        "2023-12-02": "rest_history_candles",
+        "2023-12-03": "rest_history_candles",
+        "2023-12-04": "rest_history_candles",
+        "2023-12-05": "rest_history_candles",
+        "2023-12-06": "rest_history_candles",
+        "2023-12-07": "rest_history_candles",
+        "2023-12-08": "rest_history_candles",
+        "2023-12-09": "rest_history_candles",
+        "2023-12-10": "rest_history_candles",
+        "2023-12-11": "rest_history_candles",
+        "2023-12-12": "rest_history_candles",
+        "2023-12-13": "rest_history_candles",
+        "2023-12-14": "rest_history_candles",
+        "2023-12-15": "rest_history_candles",
+        "2023-12-16": "rest_history_candles",
+        "2023-12-17": "rest_history_candles",
+        "2023-12-18": "rest_history_candles",
+        "2023-12-19": "rest_history_candles",
+        "2023-12-20": "rest_history_candles",
+        "2023-12-21": "rest_history_candles",
+        "2023-12-22": "rest_history_candles",
+        "2023-12-23": "rest_history_candles",
+        "2023-12-24": "rest_history_candles",
+        "2023-12-25": "rest_history_candles",
+        "2023-12-26": "rest_history_candles",
+        "2023-12-27": "rest_history_candles",
+        "2023-12-28": "rest_history_candles",
+        "2023-12-29": "rest_history_candles",
+        "2023-12-30": "rest_history_candles",
+        "2023-12-31": "rest_history_candles",
+        "2024-01-01": "rest_history_candles",
+        "2024-01-02": "rest_history_candles",
+        "2024-01-03": "rest_history_candles",
+        "2024-01-04": "rest_history_candles",
+        "2024-01-05": "rest_history_candles",
+        "2024-01-06": "rest_history_candles",
+        "2024-01-07": "rest_history_candles",
+        "2024-01-08": "rest_history_candles",
+        "2024-01-09": "rest_history_candles",
+        "2024-01-10": "rest_history_candles",
+        "2024-01-11": "rest_history_candles",
+        "2024-01-12": "rest_history_candles",
+        "2024-01-13": "rest_history_candles",
+        "2024-01-14": "rest_history_candles",
+        "2024-01-15": "rest_history_candles",
+        "2024-01-16": "rest_history_candles",
+        "2024-01-17": "rest_history_candles",
+        "2024-01-18": "rest_history_candles",
+        "2024-01-19": "rest_history_candles",
+        "2024-01-20": "rest_history_candles",
+        "2024-01-21": "rest_history_candles",
+        "2024-01-22": "rest_history_candles",
+        "2024-01-23": "rest_history_candles",
+        "2024-01-24": "rest_history_candles",
+        "2024-01-25": "rest_history_candles",
+        "2024-01-26": "rest_history_candles",
+        "2024-01-27": "rest_history_candles",
+        "2024-01-28": "rest_history_candles",
+        "2024-01-29": "rest_history_candles",
+        "2024-01-30": "rest_history_candles",
+        "2024-01-31": "rest_history_candles",
+        "2024-02-01": "rest_history_candles",
+        "2024-02-02": "rest_history_candles",
+        "2024-02-03": "rest_history_candles",
+        "2024-02-04": "rest_history_candles",
+        "2024-02-05": "rest_history_candles",
+        "2024-02-06": "rest_history_candles",
+        "2024-02-07": "rest_history_candles",
+        "2024-02-08": "rest_history_candles",
+        "2024-02-09": "rest_history_candles",
+        "2024-02-10": "rest_history_candles",
+        "2024-02-11": "rest_history_candles",
+        "2024-02-12": "rest_history_candles",
+        "2024-02-13": "rest_history_candles",
+        "2024-02-14": "rest_history_candles",
+        "2024-02-15": "rest_history_candles",
+        "2024-02-16": "rest_history_candles",
+        "2024-02-17": "rest_history_candles",
+        "2024-02-18": "rest_history_candles",
+        "2024-02-19": "rest_history_candles",
+        "2024-02-20": "rest_history_candles",
+        "2024-02-21": "rest_history_candles",
+        "2024-02-22": "rest_history_candles",
+        "2024-02-23": "rest_history_candles",
+        "2024-02-24": "rest_history_candles",
+        "2024-02-25": "rest_history_candles",
+        "2024-02-26": "rest_history_candles",
+        "2024-02-27": "rest_history_candles",
+        "2024-02-28": "rest_history_candles",
+        "2024-02-29": "rest_history_candles",
+        "2024-03-01": "rest_history_candles",
+        "2024-03-02": "rest_history_candles",
+        "2024-03-03": "rest_history_candles",
+        "2024-03-04": "rest_history_candles",
+        "2024-03-05": "rest_history_candles",
+        "2024-03-06": "rest_history_candles",
+        "2024-03-07": "rest_history_candles",
+        "2024-03-08": "rest_history_candles",
+        "2024-03-09": "rest_history_candles",
+        "2024-03-10": "rest_history_candles",
+        "2024-03-11": "rest_history_candles",
+        "2024-03-12": "rest_history_candles",
+        "2024-03-13": "rest_history_candles",
+        "2024-03-14": "rest_history_candles",
+        "2024-03-15": "rest_history_candles",
+        "2024-03-16": "rest_history_candles",
+        "2024-03-17": "rest_history_candles",
+        "2024-03-18": "rest_history_candles",
+        "2024-03-19": "rest_history_candles",
+        "2024-03-20": "rest_history_candles",
+        "2024-03-21": "rest_history_candles",
+        "2024-03-22": "rest_history_candles",
+        "2024-03-23": "rest_history_candles",
+        "2024-03-24": "rest_history_candles",
+        "2024-03-25": "rest_history_candles",
+        "2024-03-26": "rest_history_candles",
+        "2024-03-27": "rest_history_candles",
+        "2024-03-28": "rest_history_candles",
+        "2024-03-29": "rest_history_candles",
+        "2024-03-30": "rest_history_candles",
+        "2024-03-31": "rest_history_candles",
+        "2024-04-01": "rest_history_candles",
+        "2024-04-02": "rest_history_candles",
+        "2024-04-03": "rest_history_candles",
+        "2024-04-04": "rest_history_candles",
+        "2024-04-05": "rest_history_candles",
+        "2024-04-06": "rest_history_candles",
+        "2024-04-07": "rest_history_candles",
+        "2024-04-08": "rest_history_candles",
+        "2024-04-09": "rest_history_candles",
+        "2024-04-10": "rest_history_candles",
+        "2024-04-11": "rest_history_candles",
+        "2024-04-12": "rest_history_candles",
+        "2024-04-13": "rest_history_candles",
+        "2024-04-14": "rest_history_candles",
+        "2024-04-15": "rest_history_candles",
+        "2024-04-16": "rest_history_candles",
+        "2024-04-17": "rest_history_candles",
+        "2024-04-18": "rest_history_candles",
+        "2024-04-19": "rest_history_candles",
+        "2024-04-20": "rest_history_candles",
+        "2024-04-21": "rest_history_candles",
+        "2024-04-22": "rest_history_candles",
+        "2024-04-23": "rest_history_candles",
+        "2024-04-24": "rest_history_candles",
+        "2024-04-25": "rest_history_candles",
+        "2024-04-26": "rest_history_candles",
+        "2024-04-27": "rest_history_candles",
+        "2024-04-28": "rest_history_candles",
+        "2024-04-29": "rest_history_candles",
+        "2024-04-30": "rest_history_candles",
+        "2024-05-01": "rest_history_candles",
+        "2024-05-02": "rest_history_candles",
+        "2024-05-03": "rest_history_candles",
+        "2024-05-04": "rest_history_candles",
+        "2024-05-05": "rest_history_candles",
+        "2024-05-06": "rest_history_candles",
+        "2024-05-07": "rest_history_candles",
+        "2024-05-08": "rest_history_candles",
+        "2024-05-09": "rest_history_candles",
+        "2024-05-10": "rest_history_candles",
+        "2024-05-11": "rest_history_candles",
+        "2024-05-12": "rest_history_candles",
+        "2024-05-13": "rest_history_candles",
+        "2024-05-14": "rest_history_candles",
+        "2024-05-15": "rest_history_candles",
+        "2024-05-16": "rest_history_candles",
+        "2024-05-17": "rest_history_candles",
+        "2024-05-18": "rest_history_candles",
+        "2024-05-19": "rest_history_candles",
+        "2024-05-20": "rest_history_candles",
+        "2024-05-21": "rest_history_candles",
+        "2024-05-22": "rest_history_candles",
+        "2024-05-23": "rest_history_candles",
+        "2024-05-24": "rest_history_candles",
+        "2024-05-25": "rest_history_candles",
+        "2024-05-26": "rest_history_candles",
+        "2024-05-27": "rest_history_candles",
+        "2024-05-28": "rest_history_candles",
+        "2024-05-29": "rest_history_candles",
+        "2024-05-30": "rest_history_candles",
+        "2024-05-31": "rest_history_candles",
+        "2024-06-01": "rest_history_candles",
+        "2024-06-02": "rest_history_candles",
+        "2024-06-03": "rest_history_candles",
+        "2024-06-04": "rest_history_candles",
+        "2024-06-05": "rest_history_candles",
+        "2024-06-06": "rest_history_candles",
+        "2024-06-07": "rest_history_candles",
+        "2024-06-08": "rest_history_candles",
+        "2024-06-09": "rest_history_candles",
+        "2024-06-10": "rest_history_candles",
+        "2024-06-11": "rest_history_candles",
+        "2024-06-12": "rest_history_candles",
+        "2024-06-13": "rest_history_candles",
+        "2024-06-14": "rest_history_candles",
+        "2024-06-15": "rest_history_candles",
+        "2024-06-16": "rest_history_candles",
+        "2024-06-17": "rest_history_candles",
+        "2024-06-18": "rest_history_candles",
+        "2024-06-19": "rest_history_candles",
+        "2024-06-20": "rest_history_candles",
+        "2024-06-21": "rest_history_candles",
+        "2024-06-22": "rest_history_candles",
+        "2024-06-23": "rest_history_candles",
+        "2024-06-24": "rest_history_candles",
+        "2024-06-25": "rest_history_candles",
+        "2024-06-26": "rest_history_candles",
+        "2024-06-27": "rest_history_candles",
+        "2024-06-28": "rest_history_candles",
+        "2024-06-29": "rest_history_candles",
+        "2024-06-30": "rest_history_candles",
+        "2024-07-01": "rest_history_candles",
+        "2024-07-02": "rest_history_candles",
+        "2024-07-03": "rest_history_candles",
+        "2024-07-04": "rest_history_candles",
+        "2024-07-05": "rest_history_candles",
+        "2024-07-06": "rest_history_candles",
+        "2024-07-07": "rest_history_candles",
+        "2024-07-08": "rest_history_candles",
+        "2024-07-09": "rest_history_candles",
+        "2024-07-10": "rest_history_candles",
+        "2024-07-11": "rest_history_candles",
+        "2024-07-12": "rest_history_candles",
+        "2024-07-13": "rest_history_candles",
+        "2024-07-14": "rest_history_candles",
+        "2024-07-15": "rest_history_candles",
+        "2024-07-16": "rest_history_candles",
+        "2024-07-17": "rest_history_candles",
+        "2024-07-18": "rest_history_candles",
+        "2024-07-19": "rest_history_candles",
+        "2024-07-20": "rest_history_candles",
+        "2024-07-21": "rest_history_candles",
+        "2024-07-22": "rest_history_candles",
+        "2024-07-23": "rest_history_candles",
+        "2024-07-24": "rest_history_candles",
+        "2024-07-25": "rest_history_candles",
+        "2024-07-26": "rest_history_candles",
+        "2024-07-27": "rest_history_candles",
+        "2024-07-28": "rest_history_candles",
+        "2024-07-29": "rest_history_candles",
+        "2024-07-30": "rest_history_candles",
+        "2024-07-31": "rest_history_candles",
+        "2024-08-01": "rest_history_candles",
+        "2024-08-02": "rest_history_candles",
+        "2024-08-03": "rest_history_candles",
+        "2024-08-04": "rest_history_candles",
+        "2024-08-05": "rest_history_candles",
+        "2024-08-06": "rest_history_candles",
+        "2024-08-07": "rest_history_candles",
+        "2024-08-08": "rest_history_candles",
+        "2024-08-09": "rest_history_candles",
+        "2024-08-10": "rest_history_candles",
+        "2024-08-11": "rest_history_candles",
+        "2024-08-12": "rest_history_candles",
+        "2024-08-13": "rest_history_candles",
+        "2024-08-14": "rest_history_candles",
+        "2024-08-15": "rest_history_candles",
+        "2024-08-16": "rest_history_candles",
+        "2024-08-17": "rest_history_candles",
+        "2024-08-18": "rest_history_candles",
+        "2024-08-19": "rest_history_candles",
+        "2024-08-20": "rest_history_candles",
+        "2024-08-21": "rest_history_candles",
+        "2024-08-22": "rest_history_candles",
+        "2024-08-23": "rest_history_candles",
+        "2024-08-24": "rest_history_candles",
+        "2024-08-25": "rest_history_candles",
+        "2024-08-26": "rest_history_candles",
+        "2024-08-27": "rest_history_candles",
+        "2024-08-28": "rest_history_candles",
+        "2024-08-29": "rest_history_candles",
+        "2024-08-30": "rest_history_candles",
+        "2024-08-31": "rest_history_candles",
+        "2024-09-01": "rest_history_candles",
+        "2024-09-02": "rest_history_candles",
+        "2024-09-03": "rest_history_candles",
+        "2024-09-04": "rest_history_candles",
+        "2024-09-05": "rest_history_candles",
+        "2024-09-06": "rest_history_candles",
+        "2024-09-07": "rest_history_candles",
+        "2024-09-08": "rest_history_candles",
+        "2024-09-09": "rest_history_candles",
+        "2024-09-10": "rest_history_candles",
+        "2024-09-11": "rest_history_candles",
+        "2024-09-12": "rest_history_candles",
+        "2024-09-13": "rest_history_candles",
+        "2024-09-14": "rest_history_candles",
+        "2024-09-15": "rest_history_candles",
+        "2024-09-16": "rest_history_candles",
+        "2024-09-17": "rest_history_candles",
+        "2024-09-18": "rest_history_candles",
+        "2024-09-19": "rest_history_candles",
+        "2024-09-20": "rest_history_candles",
+        "2024-09-21": "rest_history_candles",
+        "2024-09-22": "rest_history_candles",
+        "2024-09-23": "rest_history_candles"
+      },
+      "inst_id": "DOGE-USDT",
+      "kind": "candles",
+      "columns": [
+        "timestamp",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "volume_ccy"
+      ],
+      "edge_gaps": [],
+      "pages": 2189,
+      "unconfirmed_dropped": 0,
+      "served_outside_window": 0,
+      "duplicate_conflicts": 0,
+      "off_grid_rows": 0,
+      "no_data_before_ms": null
+    },
+    {
+      "path": "data/history/oos/doge_2023/DOGE-USDT-SWAP/funding_rates.parquet",
+      "rows": 1368,
+      "first_ts": 1687737605000,
+      "last_ts": 1727107200000,
+      "step_ms": 28800000,
+      "gaps": [
+        [
+          1687939205000,
+          1687939206000
+        ],
+        [
+          1688025604000,
+          1688025605000
+        ],
+        [
+          1688112004000,
+          1688112005000
+        ],
+        [
+          1688198404000,
+          1688198405000
+        ],
+        [
+          1688284804000,
+          1688284805000
+        ],
+        [
+          1688371204000,
+          1688371205000
+        ],
+        [
+          1688457604000,
+          1688457605000
+        ],
+        [
+          1688544004000,
+          1688544005000
+        ],
+        [
+          1688572805000,
+          1688572806000
+        ],
+        [
+          1688630404000,
+          1688630405000
+        ],
+        [
+          1688716804000,
+          1688716806000
+        ],
+        [
+          1688803204000,
+          1688803205000
+        ],
+        [
+          1689580805000,
+          1689580806000
+        ],
+        [
+          1689667205000,
+          1689667206000
+        ],
+        [
+          1689926405000,
+          1689926406000
+        ],
+        [
+          1690099205000,
+          1690099206000
+        ],
+        [
+          1690214405000,
+          1690214406000
+        ],
+        [
+          1690358405000,
+          1690358406000
+        ],
+        [
+          1690444805000,
+          1690444806000
+        ],
+        [
+          1690531205000,
+          1690531206000
+        ],
+        [
+          1690617605000,
+          1690617606000
+        ],
+        [
+          1690790405000,
+          1690790406000
+        ],
+        [
+          1690876805000,
+          1690876806000
+        ],
+        [
+          1690963205000,
+          1690963206000
+        ],
+        [
+          1691136005000,
+          1691136006000
+        ],
+        [
+          1691481605000,
+          1691481606000
+        ],
+        [
+          1691568005000,
+          1691568006000
+        ],
+        [
+          1691740805000,
+          1691740806000
+        ],
+        [
+          1691827205000,
+          1691827206000
+        ],
+        [
+          1691913605000,
+          1691913606000
+        ],
+        [
+          1692000005000,
+          1692000006000
+        ],
+        [
+          1692086405000,
+          1692086408000
+        ],
+        [
+          1692172805000,
+          1692172806000
+        ],
+        [
+          1692201606000,
+          1692201608000
+        ],
+        [
+          1692259205000,
+          1692259206000
+        ],
+        [
+          1692345605000,
+          1692345608000
+        ],
+        [
+          1692432005000,
+          1692432006000
+        ],
+        [
+          1692604805000,
+          1692604806000
+        ],
+        [
+          1692691205000,
+          1692691206000
+        ],
+        [
+          1692777605000,
+          1692777606000
+        ],
+        [
+          1692864005000,
+          1692864007000
+        ],
+        [
+          1692950405000,
+          1692950406000
+        ],
+        [
+          1693036805000,
+          1693036806000
+        ],
+        [
+          1693209605000,
+          1693209606000
+        ],
+        [
+          1693296005000,
+          1693296006000
+        ],
+        [
+          1693382405000,
+          1693382406000
+        ],
+        [
+          1693411206000,
+          1693411208000
+        ],
+        [
+          1693468805000,
+          1693468806000
+        ],
+        [
+          1693555205000,
+          1693555206000
+        ],
+        [
+          1693641605000,
+          1693641606000
+        ],
+        [
+          1693728005000,
+          1693728006000
+        ],
+        [
+          1693814405000,
+          1693814406000
+        ],
+        [
+          1693900805000,
+          1693900806000
+        ],
+        [
+          1693987205000,
+          1693987206000
+        ],
+        [
+          1694160005000,
+          1694160007000
+        ],
+        [
+          1694246405000,
+          1694246406000
+        ],
+        [
+          1694419205000,
+          1694419206000
+        ],
+        [
+          1694505605000,
+          1694505606000
+        ],
+        [
+          1694592005000,
+          1694592006000
+        ],
+        [
+          1694678405000,
+          1694678406000
+        ],
+        [
+          1694764804000,
+          1694764806000
+        ],
+        [
+          1694851205000,
+          1694851206000
+        ],
+        [
+          1694937605000,
+          1694937606000
+        ],
+        [
+          1695196803000,
+          1695196804000
+        ],
+        [
+          1695225604000,
+          1695225605000
+        ],
+        [
+          1695369603000,
+          1695369605000
+        ],
+        [
+          1695715203000,
+          1695715205000
+        ],
+        [
+          1695830404000,
+          1695830406000
+        ],
+        [
+          1695974403000,
+          1695974405000
+        ],
+        [
+          1696032003000,
+          1696032004000
+        ],
+        [
+          1696233603000,
+          1696233604000
+        ],
+        [
+          1696320003000,
+          1696320005000
+        ],
+        [
+          1696406403000,
+          1696406404000
+        ],
+        [
+          1696492803000,
+          1696492804000
+        ],
+        [
+          1696550403000,
+          1696550404000
+        ],
+        [
+          1696579204000,
+          1696579205000
+        ],
+        [
+          1696608005000,
+          1696608022000
+        ],
+        [
+          1696665603000,
+          1696665605000
+        ],
+        [
+          1696752003000,
+          1696752004000
+        ],
+        [
+          1696838403000,
+          1696838405000
+        ],
+        [
+          1696867205000,
+          1696867219000
+        ],
+        [
+          1696924804000,
+          1696924805000
+        ],
+        [
+          1697011203000,
+          1697011204000
+        ],
+        [
+          1697097603000,
+          1697097605000
+        ],
+        [
+          1697126405000,
+          1697126411000
+        ],
+        [
+          1697184003000,
+          1697184005000
+        ],
+        [
+          1697270403000,
+          1697270404000
+        ],
+        [
+          1697356804000,
+          1697356805000
+        ],
+        [
+          1697443203000,
+          1697443204000
+        ],
+        [
+          1697529603000,
+          1697529605000
+        ],
+        [
+          1697558405000,
+          1697558414000
+        ],
+        [
+          1697616003000,
+          1697616004000
+        ],
+        [
+          1697644804000,
+          1697644806000
+        ],
+        [
+          1697702404000,
+          1697702405000
+        ],
+        [
+          1697731205000,
+          1697731214000
+        ],
+        [
+          1697788804000,
+          1697788805000
+        ],
+        [
+          1697846403000,
+          1697846404000
+        ],
+        [
+          1697875204000,
+          1697875205000
+        ],
+        [
+          1697961604000,
+          1697961605000
+        ],
+        [
+          1698019203000,
+          1698019204000
+        ],
+        [
+          1698048004000,
+          1698048006000
+        ],
+        [
+          1698105604000,
+          1698105606000
+        ],
+        [
+          1698163204000,
+          1698163223000
+        ],
+        [
+          1698220803000,
+          1698220805000
+        ],
+        [
+          1698307204000,
+          1698307205000
+        ],
+        [
+          1698393604000,
+          1698393606000
+        ],
+        [
+          1698480004000,
+          1698480005000
+        ],
+        [
+          1698566403000,
+          1698566405000
+        ],
+        [
+          1698652804000,
+          1698652805000
+        ],
+        [
+          1698710403000,
+          1698710404000
+        ],
+        [
+          1698825603000,
+          1698825605000
+        ],
+        [
+          1698854405000,
+          1698854416000
+        ],
+        [
+          1698998404000,
+          1698998405000
+        ],
+        [
+          1699027205000,
+          1699027212000
+        ],
+        [
+          1699084803000,
+          1699084805000
+        ],
+        [
+          1699257603000,
+          1699257605000
+        ],
+        [
+          1699372804000,
+          1699372813000
+        ],
+        [
+          1699430403000,
+          1699430405000
+        ],
+        [
+          1699459205000,
+          1699459206000
+        ],
+        [
+          1699516803000,
+          1699516804000
+        ],
+        [
+          1699603203000,
+          1699603206000
+        ],
+        [
+          1699689603000,
+          1699689605000
+        ],
+        [
+          1699776004000,
+          1699776005000
+        ],
+        [
+          1700035204000,
+          1700035205000
+        ],
+        [
+          1700208003000,
+          1700208005000
+        ],
+        [
+          1700294404000,
+          1700294405000
+        ],
+        [
+          1700380803000,
+          1700380805000
+        ],
+        [
+          1700467204000,
+          1700467205000
+        ],
+        [
+          1700496005000,
+          1700496013000
+        ],
+        [
+          1700553604000,
+          1700553605000
+        ],
+        [
+          1700640004000,
+          1700640006000
+        ],
+        [
+          1700726403000,
+          1700726406000
+        ],
+        [
+          1700755206000,
+          1700755212000
+        ],
+        [
+          1700812803000,
+          1700812806000
+        ],
+        [
+          1700899203000,
+          1700899204000
+        ],
+        [
+          1701072003000,
+          1701072004000
+        ],
+        [
+          1701100804000,
+          1701100820000
+        ],
+        [
+          1701216003000,
+          1701216004000
+        ],
+        [
+          1701331203000,
+          1701331205000
+        ],
+        [
+          1701360005000,
+          1701360009000
+        ],
+        [
+          1701417603000,
+          1701417604000
+        ],
+        [
+          1701446404000,
+          1701446411000
+        ],
+        [
+          1701561603000,
+          1701561604000
+        ],
+        [
+          1701705603000,
+          1701705604000
+        ],
+        [
+          1701763204000,
+          1701763205000
+        ],
+        [
+          1701849604000,
+          1701849605000
+        ],
+        [
+          1701878405000,
+          1701878407000
+        ],
+        [
+          1702022404000,
+          1702022413000
+        ],
+        [
+          1702281604000,
+          1702281605000
+        ],
+        [
+          1702310405000,
+          1702310412000
+        ],
+        [
+          1702368003000,
+          1702368005000
+        ],
+        [
+          1702483204000,
+          1702483207000
+        ],
+        [
+          1702569604000,
+          1702569616000
+        ],
+        [
+          1702627203000,
+          1702627209000
+        ],
+        [
+          1702713604000,
+          1702713605000
+        ],
+        [
+          1702915204000,
+          1702915217000
+        ],
+        [
+          1703088004000,
+          1703088007000
+        ],
+        [
+          1703145604000,
+          1703145605000
+        ],
+        [
+          1703232004000,
+          1703232005000
+        ],
+        [
+          1703318404000,
+          1703318405000
+        ],
+        [
+          1703404804000,
+          1703404805000
+        ],
+        [
+          1703462404000,
+          1703462405000
+        ],
+        [
+          1703577604000,
+          1703577605000
+        ],
+        [
+          1703664004000,
+          1703664005000
+        ],
+        [
+          1703750404000,
+          1703750405000
+        ],
+        [
+          1703980803000,
+          1703980804000
+        ],
+        [
+          1704182404000,
+          1704182405000
+        ],
+        [
+          1704297604000,
+          1704297605000
+        ],
+        [
+          1704355204000,
+          1704355205000
+        ],
+        [
+          1704441604000,
+          1704441605000
+        ],
+        [
+          1704528004000,
+          1704528005000
+        ],
+        [
+          1704614404000,
+          1704614405000
+        ],
+        [
+          1704902404000,
+          1704902407000
+        ],
+        [
+          1705046404000,
+          1705046405000
+        ],
+        [
+          1705132804000,
+          1705132805000
+        ]
+      ],
+      "sha256": "8b48971c9974667d05e114aca2936c87595a28d4f01e1ab4189b467a024603f2",
+      "source_by_day": {
+        "2023-06-25": "none_expected",
+        "2023-06-26": "archive_module_3",
+        "2023-06-27": "archive_module_3",
+        "2023-06-28": "archive_module_3",
+        "2023-06-29": "archive_module_3",
+        "2023-06-30": "archive_module_3",
+        "2023-07-01": "archive_module_3",
+        "2023-07-02": "archive_module_3",
+        "2023-07-03": "archive_module_3",
+        "2023-07-04": "archive_module_3",
+        "2023-07-05": "archive_module_3",
+        "2023-07-06": "archive_module_3",
+        "2023-07-07": "archive_module_3",
+        "2023-07-08": "archive_module_3",
+        "2023-07-09": "archive_module_3",
+        "2023-07-10": "archive_module_3",
+        "2023-07-11": "archive_module_3",
+        "2023-07-12": "archive_module_3",
+        "2023-07-13": "archive_module_3",
+        "2023-07-14": "archive_module_3",
+        "2023-07-15": "archive_module_3",
+        "2023-07-16": "archive_module_3",
+        "2023-07-17": "archive_module_3",
+        "2023-07-18": "archive_module_3",
+        "2023-07-19": "archive_module_3",
+        "2023-07-20": "archive_module_3",
+        "2023-07-21": "archive_module_3",
+        "2023-07-22": "archive_module_3",
+        "2023-07-23": "archive_module_3",
+        "2023-07-24": "archive_module_3",
+        "2023-07-25": "archive_module_3",
+        "2023-07-26": "archive_module_3",
+        "2023-07-27": "archive_module_3",
+        "2023-07-28": "archive_module_3",
+        "2023-07-29": "archive_module_3",
+        "2023-07-30": "archive_module_3",
+        "2023-07-31": "archive_module_3",
+        "2023-08-01": "archive_module_3",
+        "2023-08-02": "archive_module_3",
+        "2023-08-03": "archive_module_3",
+        "2023-08-04": "archive_module_3",
+        "2023-08-05": "archive_module_3",
+        "2023-08-06": "archive_module_3",
+        "2023-08-07": "archive_module_3",
+        "2023-08-08": "archive_module_3",
+        "2023-08-09": "archive_module_3",
+        "2023-08-10": "archive_module_3",
+        "2023-08-11": "archive_module_3",
+        "2023-08-12": "archive_module_3",
+        "2023-08-13": "archive_module_3",
+        "2023-08-14": "archive_module_3",
+        "2023-08-15": "archive_module_3",
+        "2023-08-16": "archive_module_3",
+        "2023-08-17": "archive_module_3",
+        "2023-08-18": "archive_module_3",
+        "2023-08-19": "archive_module_3",
+        "2023-08-20": "archive_module_3",
+        "2023-08-21": "archive_module_3",
+        "2023-08-22": "archive_module_3",
+        "2023-08-23": "archive_module_3",
+        "2023-08-24": "archive_module_3",
+        "2023-08-25": "archive_module_3",
+        "2023-08-26": "archive_module_3",
+        "2023-08-27": "archive_module_3",
+        "2023-08-28": "archive_module_3",
+        "2023-08-29": "archive_module_3",
+        "2023-08-30": "archive_module_3",
+        "2023-08-31": "archive_module_3",
+        "2023-09-01": "archive_module_3",
+        "2023-09-02": "archive_module_3",
+        "2023-09-03": "archive_module_3",
+        "2023-09-04": "archive_module_3",
+        "2023-09-05": "archive_module_3",
+        "2023-09-06": "archive_module_3",
+        "2023-09-07": "archive_module_3",
+        "2023-09-08": "archive_module_3",
+        "2023-09-09": "archive_module_3",
+        "2023-09-10": "archive_module_3",
+        "2023-09-11": "archive_module_3",
+        "2023-09-12": "archive_module_3",
+        "2023-09-13": "archive_module_3",
+        "2023-09-14": "archive_module_3",
+        "2023-09-15": "archive_module_3",
+        "2023-09-16": "archive_module_3",
+        "2023-09-17": "archive_module_3",
+        "2023-09-18": "archive_module_3",
+        "2023-09-19": "archive_module_3",
+        "2023-09-20": "archive_module_3",
+        "2023-09-21": "archive_module_3",
+        "2023-09-22": "archive_module_3",
+        "2023-09-23": "archive_module_3",
+        "2023-09-24": "archive_module_3",
+        "2023-09-25": "archive_module_3",
+        "2023-09-26": "archive_module_3",
+        "2023-09-27": "archive_module_3",
+        "2023-09-28": "archive_module_3",
+        "2023-09-29": "archive_module_3",
+        "2023-09-30": "archive_module_3",
+        "2023-10-01": "archive_module_3",
+        "2023-10-02": "archive_module_3",
+        "2023-10-03": "archive_module_3",
+        "2023-10-04": "archive_module_3",
+        "2023-10-05": "archive_module_3",
+        "2023-10-06": "archive_module_3",
+        "2023-10-07": "archive_module_3",
+        "2023-10-08": "archive_module_3",
+        "2023-10-09": "archive_module_3",
+        "2023-10-10": "archive_module_3",
+        "2023-10-11": "archive_module_3",
+        "2023-10-12": "archive_module_3",
+        "2023-10-13": "archive_module_3",
+        "2023-10-14": "archive_module_3",
+        "2023-10-15": "archive_module_3",
+        "2023-10-16": "archive_module_3",
+        "2023-10-17": "archive_module_3",
+        "2023-10-18": "archive_module_3",
+        "2023-10-19": "archive_module_3",
+        "2023-10-20": "archive_module_3",
+        "2023-10-21": "archive_module_3",
+        "2023-10-22": "archive_module_3",
+        "2023-10-23": "archive_module_3",
+        "2023-10-24": "archive_module_3",
+        "2023-10-25": "archive_module_3",
+        "2023-10-26": "archive_module_3",
+        "2023-10-27": "archive_module_3",
+        "2023-10-28": "archive_module_3",
+        "2023-10-29": "archive_module_3",
+        "2023-10-30": "archive_module_3",
+        "2023-10-31": "archive_module_3",
+        "2023-11-01": "archive_module_3",
+        "2023-11-02": "archive_module_3",
+        "2023-11-03": "archive_module_3",
+        "2023-11-04": "archive_module_3",
+        "2023-11-05": "archive_module_3",
+        "2023-11-06": "archive_module_3",
+        "2023-11-07": "archive_module_3",
+        "2023-11-08": "archive_module_3",
+        "2023-11-09": "archive_module_3",
+        "2023-11-10": "archive_module_3",
+        "2023-11-11": "archive_module_3",
+        "2023-11-12": "archive_module_3",
+        "2023-11-13": "archive_module_3",
+        "2023-11-14": "archive_module_3",
+        "2023-11-15": "archive_module_3",
+        "2023-11-16": "archive_module_3",
+        "2023-11-17": "archive_module_3",
+        "2023-11-18": "archive_module_3",
+        "2023-11-19": "archive_module_3",
+        "2023-11-20": "archive_module_3",
+        "2023-11-21": "archive_module_3",
+        "2023-11-22": "archive_module_3",
+        "2023-11-23": "archive_module_3",
+        "2023-11-24": "archive_module_3",
+        "2023-11-25": "archive_module_3",
+        "2023-11-26": "archive_module_3",
+        "2023-11-27": "archive_module_3",
+        "2023-11-28": "archive_module_3",
+        "2023-11-29": "archive_module_3",
+        "2023-11-30": "archive_module_3",
+        "2023-12-01": "archive_module_3",
+        "2023-12-02": "archive_module_3",
+        "2023-12-03": "archive_module_3",
+        "2023-12-04": "archive_module_3",
+        "2023-12-05": "archive_module_3",
+        "2023-12-06": "archive_module_3",
+        "2023-12-07": "archive_module_3",
+        "2023-12-08": "archive_module_3",
+        "2023-12-09": "archive_module_3",
+        "2023-12-10": "archive_module_3",
+        "2023-12-11": "archive_module_3",
+        "2023-12-12": "archive_module_3",
+        "2023-12-13": "archive_module_3",
+        "2023-12-14": "archive_module_3",
+        "2023-12-15": "archive_module_3",
+        "2023-12-16": "archive_module_3",
+        "2023-12-17": "archive_module_3",
+        "2023-12-18": "archive_module_3",
+        "2023-12-19": "archive_module_3",
+        "2023-12-20": "archive_module_3",
+        "2023-12-21": "archive_module_3",
+        "2023-12-22": "archive_module_3",
+        "2023-12-23": "archive_module_3",
+        "2023-12-24": "archive_module_3",
+        "2023-12-25": "archive_module_3",
+        "2023-12-26": "archive_module_3",
+        "2023-12-27": "archive_module_3",
+        "2023-12-28": "archive_module_3",
+        "2023-12-29": "archive_module_3",
+        "2023-12-30": "archive_module_3",
+        "2023-12-31": "archive_module_3",
+        "2024-01-01": "archive_module_3",
+        "2024-01-02": "archive_module_3",
+        "2024-01-03": "archive_module_3",
+        "2024-01-04": "archive_module_3",
+        "2024-01-05": "archive_module_3",
+        "2024-01-06": "archive_module_3",
+        "2024-01-07": "archive_module_3",
+        "2024-01-08": "archive_module_3",
+        "2024-01-09": "archive_module_3",
+        "2024-01-10": "archive_module_3",
+        "2024-01-11": "archive_module_3",
+        "2024-01-12": "archive_module_3",
+        "2024-01-13": "archive_module_3",
+        "2024-01-14": "archive_module_3",
+        "2024-01-15": "archive_module_3",
+        "2024-01-16": "archive_module_3",
+        "2024-01-17": "archive_module_3",
+        "2024-01-18": "archive_module_3",
+        "2024-01-19": "archive_module_3",
+        "2024-01-20": "archive_module_3",
+        "2024-01-21": "archive_module_3",
+        "2024-01-22": "archive_module_3",
+        "2024-01-23": "archive_module_3",
+        "2024-01-24": "archive_module_3",
+        "2024-01-25": "archive_module_3",
+        "2024-01-26": "archive_module_3",
+        "2024-01-27": "archive_module_3",
+        "2024-01-28": "archive_module_3",
+        "2024-01-29": "archive_module_3",
+        "2024-01-30": "archive_module_3",
+        "2024-01-31": "archive_module_3",
+        "2024-02-01": "archive_module_3",
+        "2024-02-02": "archive_module_3",
+        "2024-02-03": "archive_module_3",
+        "2024-02-04": "archive_module_3",
+        "2024-02-05": "archive_module_3",
+        "2024-02-06": "archive_module_3",
+        "2024-02-07": "archive_module_3",
+        "2024-02-08": "archive_module_3",
+        "2024-02-09": "archive_module_3",
+        "2024-02-10": "archive_module_3",
+        "2024-02-11": "archive_module_3",
+        "2024-02-12": "archive_module_3",
+        "2024-02-13": "archive_module_3",
+        "2024-02-14": "archive_module_3",
+        "2024-02-15": "archive_module_3",
+        "2024-02-16": "archive_module_3",
+        "2024-02-17": "archive_module_3",
+        "2024-02-18": "archive_module_3",
+        "2024-02-19": "archive_module_3",
+        "2024-02-20": "archive_module_3",
+        "2024-02-21": "archive_module_3",
+        "2024-02-22": "archive_module_3",
+        "2024-02-23": "archive_module_3",
+        "2024-02-24": "archive_module_3",
+        "2024-02-25": "archive_module_3",
+        "2024-02-26": "archive_module_3",
+        "2024-02-27": "archive_module_3",
+        "2024-02-28": "archive_module_3",
+        "2024-02-29": "archive_module_3",
+        "2024-03-01": "archive_module_3",
+        "2024-03-02": "archive_module_3",
+        "2024-03-03": "archive_module_3",
+        "2024-03-04": "archive_module_3",
+        "2024-03-05": "archive_module_3",
+        "2024-03-06": "archive_module_3",
+        "2024-03-07": "archive_module_3",
+        "2024-03-08": "archive_module_3",
+        "2024-03-09": "archive_module_3",
+        "2024-03-10": "archive_module_3",
+        "2024-03-11": "archive_module_3",
+        "2024-03-12": "archive_module_3",
+        "2024-03-13": "archive_module_3",
+        "2024-03-14": "archive_module_3",
+        "2024-03-15": "archive_module_3",
+        "2024-03-16": "archive_module_3",
+        "2024-03-17": "archive_module_3",
+        "2024-03-18": "archive_module_3",
+        "2024-03-19": "archive_module_3",
+        "2024-03-20": "archive_module_3",
+        "2024-03-21": "archive_module_3",
+        "2024-03-22": "archive_module_3",
+        "2024-03-23": "archive_module_3",
+        "2024-03-24": "archive_module_3",
+        "2024-03-25": "archive_module_3",
+        "2024-03-26": "archive_module_3",
+        "2024-03-27": "archive_module_3",
+        "2024-03-28": "archive_module_3",
+        "2024-03-29": "archive_module_3",
+        "2024-03-30": "archive_module_3",
+        "2024-03-31": "archive_module_3",
+        "2024-04-01": "archive_module_3",
+        "2024-04-02": "archive_module_3",
+        "2024-04-03": "archive_module_3",
+        "2024-04-04": "archive_module_3",
+        "2024-04-05": "archive_module_3",
+        "2024-04-06": "archive_module_3",
+        "2024-04-07": "archive_module_3",
+        "2024-04-08": "archive_module_3",
+        "2024-04-09": "archive_module_3",
+        "2024-04-10": "archive_module_3",
+        "2024-04-11": "archive_module_3",
+        "2024-04-12": "archive_module_3",
+        "2024-04-13": "archive_module_3",
+        "2024-04-14": "archive_module_3",
+        "2024-04-15": "archive_module_3",
+        "2024-04-16": "archive_module_3",
+        "2024-04-17": "archive_module_3",
+        "2024-04-18": "archive_module_3",
+        "2024-04-19": "archive_module_3",
+        "2024-04-20": "archive_module_3",
+        "2024-04-21": "archive_module_3",
+        "2024-04-22": "archive_module_3",
+        "2024-04-23": "archive_module_3",
+        "2024-04-24": "archive_module_3",
+        "2024-04-25": "archive_module_3",
+        "2024-04-26": "archive_module_3",
+        "2024-04-27": "archive_module_3",
+        "2024-04-28": "archive_module_3",
+        "2024-04-29": "archive_module_3",
+        "2024-04-30": "archive_module_3",
+        "2024-05-01": "archive_module_3",
+        "2024-05-02": "archive_module_3",
+        "2024-05-03": "archive_module_3",
+        "2024-05-04": "archive_module_3",
+        "2024-05-05": "archive_module_3",
+        "2024-05-06": "archive_module_3",
+        "2024-05-07": "archive_module_3",
+        "2024-05-08": "archive_module_3",
+        "2024-05-09": "archive_module_3",
+        "2024-05-10": "archive_module_3",
+        "2024-05-11": "archive_module_3",
+        "2024-05-12": "archive_module_3",
+        "2024-05-13": "archive_module_3",
+        "2024-05-14": "archive_module_3",
+        "2024-05-15": "archive_module_3",
+        "2024-05-16": "archive_module_3",
+        "2024-05-17": "archive_module_3",
+        "2024-05-18": "archive_module_3",
+        "2024-05-19": "archive_module_3",
+        "2024-05-20": "archive_module_3",
+        "2024-05-21": "archive_module_3",
+        "2024-05-22": "archive_module_3",
+        "2024-05-23": "archive_module_3",
+        "2024-05-24": "archive_module_3",
+        "2024-05-25": "archive_module_3",
+        "2024-05-26": "archive_module_3",
+        "2024-05-27": "archive_module_3",
+        "2024-05-28": "archive_module_3",
+        "2024-05-29": "archive_module_3",
+        "2024-05-30": "archive_module_3",
+        "2024-05-31": "archive_module_3",
+        "2024-06-01": "archive_module_3",
+        "2024-06-02": "archive_module_3",
+        "2024-06-03": "archive_module_3",
+        "2024-06-04": "archive_module_3",
+        "2024-06-05": "archive_module_3",
+        "2024-06-06": "archive_module_3",
+        "2024-06-07": "archive_module_3",
+        "2024-06-08": "archive_module_3",
+        "2024-06-09": "archive_module_3",
+        "2024-06-10": "archive_module_3",
+        "2024-06-11": "archive_module_3",
+        "2024-06-12": "archive_module_3",
+        "2024-06-13": "archive_module_3",
+        "2024-06-14": "archive_module_3",
+        "2024-06-15": "archive_module_3",
+        "2024-06-16": "archive_module_3",
+        "2024-06-17": "archive_module_3",
+        "2024-06-18": "archive_module_3",
+        "2024-06-19": "archive_module_3",
+        "2024-06-20": "archive_module_3",
+        "2024-06-21": "archive_module_3",
+        "2024-06-22": "archive_module_3",
+        "2024-06-23": "archive_module_3",
+        "2024-06-24": "archive_module_3",
+        "2024-06-25": "archive_module_3",
+        "2024-06-26": "archive_module_3",
+        "2024-06-27": "archive_module_3",
+        "2024-06-28": "archive_module_3",
+        "2024-06-29": "archive_module_3",
+        "2024-06-30": "archive_module_3",
+        "2024-07-01": "archive_module_3",
+        "2024-07-02": "archive_module_3",
+        "2024-07-03": "archive_module_3",
+        "2024-07-04": "archive_module_3",
+        "2024-07-05": "archive_module_3",
+        "2024-07-06": "archive_module_3",
+        "2024-07-07": "archive_module_3",
+        "2024-07-08": "archive_module_3",
+        "2024-07-09": "archive_module_3",
+        "2024-07-10": "archive_module_3",
+        "2024-07-11": "archive_module_3",
+        "2024-07-12": "archive_module_3",
+        "2024-07-13": "archive_module_3",
+        "2024-07-14": "archive_module_3",
+        "2024-07-15": "archive_module_3",
+        "2024-07-16": "archive_module_3",
+        "2024-07-17": "archive_module_3",
+        "2024-07-18": "archive_module_3",
+        "2024-07-19": "archive_module_3",
+        "2024-07-20": "archive_module_3",
+        "2024-07-21": "archive_module_3",
+        "2024-07-22": "archive_module_3",
+        "2024-07-23": "archive_module_3",
+        "2024-07-24": "archive_module_3",
+        "2024-07-25": "archive_module_3",
+        "2024-07-26": "archive_module_3",
+        "2024-07-27": "archive_module_3",
+        "2024-07-28": "archive_module_3",
+        "2024-07-29": "archive_module_3",
+        "2024-07-30": "archive_module_3",
+        "2024-07-31": "archive_module_3",
+        "2024-08-01": "archive_module_3",
+        "2024-08-02": "archive_module_3",
+        "2024-08-03": "archive_module_3",
+        "2024-08-04": "archive_module_3",
+        "2024-08-05": "archive_module_3",
+        "2024-08-06": "archive_module_3",
+        "2024-08-07": "archive_module_3",
+        "2024-08-08": "archive_module_3",
+        "2024-08-09": "archive_module_3",
+        "2024-08-10": "archive_module_3",
+        "2024-08-11": "archive_module_3",
+        "2024-08-12": "archive_module_3",
+        "2024-08-13": "archive_module_3",
+        "2024-08-14": "archive_module_3",
+        "2024-08-15": "archive_module_3",
+        "2024-08-16": "archive_module_3",
+        "2024-08-17": "archive_module_3",
+        "2024-08-18": "archive_module_3",
+        "2024-08-19": "archive_module_3",
+        "2024-08-20": "archive_module_3",
+        "2024-08-21": "archive_module_3",
+        "2024-08-22": "archive_module_3",
+        "2024-08-23": "archive_module_3",
+        "2024-08-24": "archive_module_3",
+        "2024-08-25": "archive_module_3",
+        "2024-08-26": "archive_module_3",
+        "2024-08-27": "archive_module_3",
+        "2024-08-28": "archive_module_3",
+        "2024-08-29": "archive_module_3",
+        "2024-08-30": "archive_module_3",
+        "2024-08-31": "archive_module_3",
+        "2024-09-01": "archive_module_3",
+        "2024-09-02": "archive_module_3",
+        "2024-09-03": "archive_module_3",
+        "2024-09-04": "archive_module_3",
+        "2024-09-05": "archive_module_3",
+        "2024-09-06": "archive_module_3",
+        "2024-09-07": "archive_module_3",
+        "2024-09-08": "archive_module_3",
+        "2024-09-09": "archive_module_3",
+        "2024-09-10": "archive_module_3",
+        "2024-09-11": "archive_module_3",
+        "2024-09-12": "archive_module_3",
+        "2024-09-13": "archive_module_3",
+        "2024-09-14": "archive_module_3",
+        "2024-09-15": "archive_module_3",
+        "2024-09-16": "archive_module_3",
+        "2024-09-17": "archive_module_3",
+        "2024-09-18": "archive_module_3",
+        "2024-09-19": "archive_module_3",
+        "2024-09-20": "archive_module_3",
+        "2024-09-21": "archive_module_3",
+        "2024-09-22": "archive_module_3",
+        "2024-09-23": "archive_module_3"
+      },
+      "inst_id": "DOGE-USDT-SWAP",
+      "kind": "funding",
+      "columns": [
+        "timestamp",
+        "rate",
+        "realized_rate"
+      ],
+      "edge_gaps": [],
+      "archive_months_used": [
+        "2023-06",
+        "2023-07",
+        "2023-08",
+        "2023-09",
+        "2023-10",
+        "2023-11",
+        "2023-12",
+        "2024-01",
+        "2024-02",
+        "2024-03",
+        "2024-04",
+        "2024-05",
+        "2024-06",
+        "2024-07",
+        "2024-08",
+        "2024-09"
+      ],
+      "archive_months_skipped_protected": [],
+      "rest_ranges": [],
+      "duplicate_conflicts": 0,
+      "archive_rows_outside_file_month": 0,
+      "spacing_other_than_expected": [
+        [
+          1687910405000,
+          1687939206000
+        ],
+        [
+          1687939206000,
+          1687968004000
+        ],
+        [
+          1687996804000,
+          1688025605000
+        ],
+        [
+          1688054405000,
+          1688083204000
+        ],
+        [
+          1688083204000,
+          1688112005000
+        ],
+        [
+          1688140805000,
+          1688169604000
+        ],
+        [
+          1688169604000,
+          1688198405000
+        ],
+        [
+          1688198405000,
+          1688227204000
+        ],
+        [
+          1688256004000,
+          1688284805000
+        ],
+        [
+          1688313605000,
+          1688342404000
+        ],
+        [
+          1688342404000,
+          1688371205000
+        ],
+        [
+          1688371205000,
+          1688400004000
+        ],
+        [
+          1688428804000,
+          1688457605000
+        ],
+        [
+          1688486405000,
+          1688515204000
+        ],
+        [
+          1688515204000,
+          1688544005000
+        ],
+        [
+          1688544005000,
+          1688572806000
+        ],
+        [
+          1688572806000,
+          1688601604000
+        ],
+        [
+          1688601604000,
+          1688630405000
+        ],
+        [
+          1688659205000,
+          1688688004000
+        ],
+        [
+          1688688004000,
+          1688716806000
+        ],
+        [
+          1688716806000,
+          1688745604000
+        ],
+        [
+          1688774404000,
+          1688803205000
+        ],
+        [
+          1689552005000,
+          1689580806000
+        ],
+        [
+          1689580806000,
+          1689609605000
+        ],
+        [
+          1689638405000,
+          1689667206000
+        ],
+        [
+          1689667206000,
+          1689696005000
+        ],
+        [
+          1689897605000,
+          1689926406000
+        ],
+        [
+          1689926406000,
+          1689955205000
+        ],
+        [
+          1690070405000,
+          1690099206000
+        ],
+        [
+          1690099206000,
+          1690128005000
+        ],
+        [
+          1690185605000,
+          1690214406000
+        ],
+        [
+          1690214406000,
+          1690243205000
+        ],
+        [
+          1690329605000,
+          1690358406000
+        ],
+        [
+          1690358406000,
+          1690387205000
+        ],
+        [
+          1690416005000,
+          1690444806000
+        ],
+        [
+          1690444806000,
+          1690473605000
+        ],
+        [
+          1690502405000,
+          1690531206000
+        ],
+        [
+          1690531206000,
+          1690560005000
+        ],
+        [
+          1690588805000,
+          1690617606000
+        ],
+        [
+          1690617606000,
+          1690646405000
+        ],
+        [
+          1690761605000,
+          1690790406000
+        ],
+        [
+          1690790406000,
+          1690819205000
+        ],
+        [
+          1690848005000,
+          1690876806000
+        ],
+        [
+          1690905606000,
+          1690934405000
+        ],
+        [
+          1690934405000,
+          1690963206000
+        ],
+        [
+          1690963206000,
+          1690992005000
+        ],
+        [
+          1691107205000,
+          1691136006000
+        ],
+        [
+          1691136006000,
+          1691164805000
+        ],
+        [
+          1691452805000,
+          1691481606000
+        ],
+        [
+          1691481606000,
+          1691510405000
+        ],
+        [
+          1691539205000,
+          1691568006000
+        ],
+        [
+          1691568006000,
+          1691596805000
+        ],
+        [
+          1691712005000,
+          1691740806000
+        ],
+        [
+          1691740806000,
+          1691769605000
+        ],
+        [
+          1691798405000,
+          1691827206000
+        ],
+        [
+          1691827206000,
+          1691856005000
+        ],
+        [
+          1691884805000,
+          1691913606000
+        ],
+        [
+          1691913606000,
+          1691942405000
+        ],
+        [
+          1691971205000,
+          1692000006000
+        ],
+        [
+          1692000006000,
+          1692028805000
+        ],
+        [
+          1692057605000,
+          1692086408000
+        ],
+        [
+          1692086408000,
+          1692115205000
+        ],
+        [
+          1692144005000,
+          1692172806000
+        ],
+        [
+          1692172806000,
+          1692201608000
+        ],
+        [
+          1692201608000,
+          1692230405000
+        ],
+        [
+          1692230405000,
+          1692259206000
+        ],
+        [
+          1692259206000,
+          1692288005000
+        ],
+        [
+          1692316805000,
+          1692345608000
+        ],
+        [
+          1692345608000,
+          1692374407000
+        ],
+        [
+          1692374407000,
+          1692403205000
+        ],
+        [
+          1692403205000,
+          1692432006000
+        ],
+        [
+          1692432006000,
+          1692460805000
+        ],
+        [
+          1692576005000,
+          1692604806000
+        ],
+        [
+          1692604806000,
+          1692633605000
+        ],
+        [
+          1692662405000,
+          1692691206000
+        ],
+        [
+          1692691206000,
+          1692720005000
+        ],
+        [
+          1692748805000,
+          1692777606000
+        ],
+        [
+          1692777606000,
+          1692806405000
+        ],
+        [
+          1692835205000,
+          1692864007000
+        ],
+        [
+          1692864007000,
+          1692892805000
+        ],
+        [
+          1692921605000,
+          1692950406000
+        ],
+        [
+          1692950406000,
+          1692979205000
+        ],
+        [
+          1693008005000,
+          1693036806000
+        ],
+        [
+          1693036806000,
+          1693065605000
+        ],
+        [
+          1693180805000,
+          1693209606000
+        ],
+        [
+          1693209606000,
+          1693238405000
+        ],
+        [
+          1693267205000,
+          1693296006000
+        ],
+        [
+          1693296006000,
+          1693324805000
+        ],
+        [
+          1693353605000,
+          1693382406000
+        ],
+        [
+          1693382406000,
+          1693411208000
+        ],
+        [
+          1693411208000,
+          1693440005000
+        ],
+        [
+          1693440005000,
+          1693468806000
+        ],
+        [
+          1693468806000,
+          1693497605000
+        ],
+        [
+          1693526405000,
+          1693555206000
+        ],
+        [
+          1693555206000,
+          1693584005000
+        ],
+        [
+          1693612805000,
+          1693641606000
+        ],
+        [
+          1693641606000,
+          1693670405000
+        ],
+        [
+          1693699205000,
+          1693728006000
+        ],
+        [
+          1693728006000,
+          1693756805000
+        ],
+        [
+          1693785605000,
+          1693814406000
+        ],
+        [
+          1693814406000,
+          1693843205000
+        ],
+        [
+          1693872005000,
+          1693900806000
+        ],
+        [
+          1693900806000,
+          1693929605000
+        ],
+        [
+          1693958405000,
+          1693987206000
+        ],
+        [
+          1694016006000,
+          1694044805000
+        ],
+        [
+          1694131205000,
+          1694160007000
+        ],
+        [
+          1694160007000,
+          1694188805000
+        ],
+        [
+          1694217605000,
+          1694246406000
+        ],
+        [
+          1694246406000,
+          1694275205000
+        ],
+        [
+          1694390405000,
+          1694419206000
+        ],
+        [
+          1694419206000,
+          1694448005000
+        ],
+        [
+          1694476805000,
+          1694505606000
+        ],
+        [
+          1694505606000,
+          1694534405000
+        ],
+        [
+          1694563205000,
+          1694592006000
+        ],
+        [
+          1694592006000,
+          1694620805000
+        ],
+        [
+          1694649605000,
+          1694678406000
+        ],
+        [
+          1694678406000,
+          1694707205000
+        ],
+        [
+          1694707205000,
+          1694736004000
+        ],
+        [
+          1694736004000,
+          1694764806000
+        ],
+        [
+          1694764806000,
+          1694793605000
+        ],
+        [
+          1694822405000,
+          1694851206000
+        ],
+        [
+          1694880006000,
+          1694908805000
+        ],
+        [
+          1694908805000,
+          1694937606000
+        ],
+        [
+          1694937606000,
+          1694966405000
+        ],
+        [
+          1695081605000,
+          1695110404000
+        ],
+        [
+          1695139204000,
+          1695168003000
+        ],
+        [
+          1695168003000,
+          1695196804000
+        ],
+        [
+          1695196804000,
+          1695225605000
+        ],
+        [
+          1695225605000,
+          1695254404000
+        ],
+        [
+          1695312004000,
+          1695340803000
+        ],
+        [
+          1695340803000,
+          1695369605000
+        ],
+        [
+          1695369605000,
+          1695398404000
+        ],
+        [
+          1695628804000,
+          1695657603000
+        ],
+        [
+          1695686403000,
+          1695715205000
+        ],
+        [
+          1695715205000,
+          1695744004000
+        ],
+        [
+          1695801604000,
+          1695830406000
+        ],
+        [
+          1695830406000,
+          1695859204000
+        ],
+        [
+          1695888004000,
+          1695916803000
+        ],
+        [
+          1695945603000,
+          1695974405000
+        ],
+        [
+          1695974405000,
+          1696003203000
+        ],
+        [
+          1696003203000,
+          1696032004000
+        ],
+        [
+          1696147204000,
+          1696176003000
+        ],
+        [
+          1696204803000,
+          1696233604000
+        ],
+        [
+          1696233604000,
+          1696262403000
+        ],
+        [
+          1696291203000,
+          1696320005000
+        ],
+        [
+          1696320005000,
+          1696348804000
+        ],
+        [
+          1696348804000,
+          1696377603000
+        ],
+        [
+          1696377603000,
+          1696406404000
+        ],
+        [
+          1696406404000,
+          1696435203000
+        ],
+        [
+          1696464003000,
+          1696492804000
+        ],
+        [
+          1696492804000,
+          1696521603000
+        ],
+        [
+          1696521603000,
+          1696550404000
+        ],
+        [
+          1696550404000,
+          1696579205000
+        ],
+        [
+          1696579205000,
+          1696608022000
+        ],
+        [
+          1696608022000,
+          1696636803000
+        ],
+        [
+          1696636803000,
+          1696665605000
+        ],
+        [
+          1696665605000,
+          1696694404000
+        ],
+        [
+          1696694404000,
+          1696723203000
+        ],
+        [
+          1696723203000,
+          1696752004000
+        ],
+        [
+          1696752004000,
+          1696780803000
+        ],
+        [
+          1696809603000,
+          1696838405000
+        ],
+        [
+          1696838405000,
+          1696867219000
+        ],
+        [
+          1696867219000,
+          1696896004000
+        ],
+        [
+          1696896004000,
+          1696924805000
+        ],
+        [
+          1696924805000,
+          1696953604000
+        ],
+        [
+          1696953604000,
+          1696982403000
+        ],
+        [
+          1696982403000,
+          1697011204000
+        ],
+        [
+          1697040004000,
+          1697068803000
+        ],
+        [
+          1697068803000,
+          1697097605000
+        ],
+        [
+          1697097605000,
+          1697126411000
+        ],
+        [
+          1697126411000,
+          1697155203000
+        ],
+        [
+          1697155203000,
+          1697184005000
+        ],
+        [
+          1697184005000,
+          1697212803000
+        ],
+        [
+          1697241603000,
+          1697270404000
+        ],
+        [
+          1697328004000,
+          1697356805000
+        ],
+        [
+          1697356805000,
+          1697385604000
+        ],
+        [
+          1697385604000,
+          1697414403000
+        ],
+        [
+          1697414403000,
+          1697443204000
+        ],
+        [
+          1697443204000,
+          1697472003000
+        ],
+        [
+          1697500803000,
+          1697529605000
+        ],
+        [
+          1697529605000,
+          1697558414000
+        ],
+        [
+          1697558414000,
+          1697587203000
+        ],
+        [
+          1697587203000,
+          1697616004000
+        ],
+        [
+          1697616004000,
+          1697644806000
+        ],
+        [
+          1697644806000,
+          1697673604000
+        ],
+        [
+          1697673604000,
+          1697702405000
+        ],
+        [
+          1697702405000,
+          1697731214000
+        ],
+        [
+          1697731214000,
+          1697760004000
+        ],
+        [
+          1697760004000,
+          1697788805000
+        ],
+        [
+          1697788805000,
+          1697817603000
+        ],
+        [
+          1697817603000,
+          1697846404000
+        ],
+        [
+          1697846404000,
+          1697875205000
+        ],
+        [
+          1697904005000,
+          1697932804000
+        ],
+        [
+          1697932804000,
+          1697961605000
+        ],
+        [
+          1697961605000,
+          1697990403000
+        ],
+        [
+          1697990403000,
+          1698019204000
+        ],
+        [
+          1698019204000,
+          1698048006000
+        ],
+        [
+          1698048006000,
+          1698076804000
+        ],
+        [
+          1698076804000,
+          1698105606000
+        ],
+        [
+          1698105606000,
+          1698134404000
+        ],
+        [
+          1698134404000,
+          1698163223000
+        ],
+        [
+          1698163223000,
+          1698192003000
+        ],
+        [
+          1698192003000,
+          1698220805000
+        ],
+        [
+          1698249605000,
+          1698278404000
+        ],
+        [
+          1698278404000,
+          1698307205000
+        ],
+        [
+          1698307205000,
+          1698336004000
+        ],
+        [
+          1698364804000,
+          1698393606000
+        ],
+        [
+          1698393606000,
+          1698422404000
+        ],
+        [
+          1698451204000,
+          1698480005000
+        ],
+        [
+          1698480005000,
+          1698508804000
+        ],
+        [
+          1698508804000,
+          1698537603000
+        ],
+        [
+          1698537603000,
+          1698566405000
+        ],
+        [
+          1698566405000,
+          1698595204000
+        ],
+        [
+          1698624004000,
+          1698652805000
+        ],
+        [
+          1698652805000,
+          1698681603000
+        ],
+        [
+          1698681603000,
+          1698710404000
+        ],
+        [
+          1698768004000,
+          1698796803000
+        ],
+        [
+          1698796803000,
+          1698825605000
+        ],
+        [
+          1698825605000,
+          1698854416000
+        ],
+        [
+          1698854416000,
+          1698883204000
+        ],
+        [
+          1698969604000,
+          1698998405000
+        ],
+        [
+          1698998405000,
+          1699027212000
+        ],
+        [
+          1699027212000,
+          1699056003000
+        ],
+        [
+          1699056003000,
+          1699084805000
+        ],
+        [
+          1699084805000,
+          1699113604000
+        ],
+        [
+          1699171204000,
+          1699200003000
+        ],
+        [
+          1699228803000,
+          1699257605000
+        ],
+        [
+          1699257605000,
+          1699286404000
+        ],
+        [
+          1699344004000,
+          1699372813000
+        ],
+        [
+          1699372813000,
+          1699401603000
+        ],
+        [
+          1699401603000,
+          1699430405000
+        ],
+        [
+          1699430405000,
+          1699459206000
+        ],
+        [
+          1699459206000,
+          1699488003000
+        ],
+        [
+          1699488003000,
+          1699516804000
+        ],
+        [
+          1699545604000,
+          1699574403000
+        ],
+        [
+          1699574403000,
+          1699603206000
+        ],
+        [
+          1699603206000,
+          1699632003000
+        ],
+        [
+          1699660803000,
+          1699689605000
+        ],
+        [
+          1699689605000,
+          1699718404000
+        ],
+        [
+          1699747204000,
+          1699776005000
+        ],
+        [
+          1699804805000,
+          1699833604000
+        ],
+        [
+          1700006404000,
+          1700035205000
+        ],
+        [
+          1700035205000,
+          1700064004000
+        ],
+        [
+          1700121604000,
+          1700150403000
+        ],
+        [
+          1700179203000,
+          1700208005000
+        ],
+        [
+          1700208005000,
+          1700236804000
+        ],
+        [
+          1700265604000,
+          1700294405000
+        ],
+        [
+          1700294405000,
+          1700323204000
+        ],
+        [
+          1700323204000,
+          1700352003000
+        ],
+        [
+          1700352003000,
+          1700380805000
+        ],
+        [
+          1700380805000,
+          1700409604000
+        ],
+        [
+          1700438404000,
+          1700467205000
+        ],
+        [
+          1700467205000,
+          1700496013000
+        ],
+        [
+          1700496013000,
+          1700524804000
+        ],
+        [
+          1700524804000,
+          1700553605000
+        ],
+        [
+          1700553605000,
+          1700582404000
+        ],
+        [
+          1700611204000,
+          1700640006000
+        ],
+        [
+          1700668806000,
+          1700697603000
+        ],
+        [
+          1700697603000,
+          1700726406000
+        ],
+        [
+          1700726406000,
+          1700755212000
+        ],
+        [
+          1700755212000,
+          1700784003000
+        ],
+        [
+          1700784003000,
+          1700812806000
+        ],
+        [
+          1700812806000,
+          1700841604000
+        ],
+        [
+          1700841604000,
+          1700870403000
+        ],
+        [
+          1700870403000,
+          1700899204000
+        ],
+        [
+          1701014404000,
+          1701043203000
+        ],
+        [
+          1701043203000,
+          1701072004000
+        ],
+        [
+          1701072004000,
+          1701100820000
+        ],
+        [
+          1701100820000,
+          1701129604000
+        ],
+        [
+          1701158404000,
+          1701187203000
+        ],
+        [
+          1701187203000,
+          1701216004000
+        ],
+        [
+          1701216004000,
+          1701244803000
+        ],
+        [
+          1701302403000,
+          1701331205000
+        ],
+        [
+          1701331205000,
+          1701360009000
+        ],
+        [
+          1701360009000,
+          1701388803000
+        ],
+        [
+          1701388803000,
+          1701417604000
+        ],
+        [
+          1701417604000,
+          1701446411000
+        ],
+        [
+          1701446411000,
+          1701475204000
+        ],
+        [
+          1701475204000,
+          1701504003000
+        ],
+        [
+          1701532803000,
+          1701561604000
+        ],
+        [
+          1701648004000,
+          1701676803000
+        ],
+        [
+          1701676803000,
+          1701705604000
+        ],
+        [
+          1701734404000,
+          1701763205000
+        ],
+        [
+          1701763205000,
+          1701792004000
+        ],
+        [
+          1701820804000,
+          1701849605000
+        ],
+        [
+          1701849605000,
+          1701878407000
+        ],
+        [
+          1701878407000,
+          1701907205000
+        ],
+        [
+          1701907205000,
+          1701936004000
+        ],
+        [
+          1701993604000,
+          1702022413000
+        ],
+        [
+          1702022413000,
+          1702051210000
+        ],
+        [
+          1702051210000,
+          1702080004000
+        ],
+        [
+          1702252804000,
+          1702281605000
+        ],
+        [
+          1702281605000,
+          1702310412000
+        ],
+        [
+          1702310412000,
+          1702339203000
+        ],
+        [
+          1702339203000,
+          1702368005000
+        ],
+        [
+          1702368005000,
+          1702396804000
+        ],
+        [
+          1702454404000,
+          1702483207000
+        ],
+        [
+          1702483207000,
+          1702512004000
+        ],
+        [
+          1702540804000,
+          1702569616000
+        ],
+        [
+          1702569616000,
+          1702598403000
+        ],
+        [
+          1702598403000,
+          1702627209000
+        ],
+        [
+          1702627209000,
+          1702656004000
+        ],
+        [
+          1702684804000,
+          1702713605000
+        ],
+        [
+          1702713605000,
+          1702742404000
+        ],
+        [
+          1702886404000,
+          1702915217000
+        ],
+        [
+          1702915217000,
+          1702944004000
+        ],
+        [
+          1703059204000,
+          1703088007000
+        ],
+        [
+          1703088007000,
+          1703116804000
+        ],
+        [
+          1703116804000,
+          1703145605000
+        ],
+        [
+          1703145605000,
+          1703174404000
+        ],
+        [
+          1703203204000,
+          1703232005000
+        ],
+        [
+          1703232005000,
+          1703260804000
+        ],
+        [
+          1703289604000,
+          1703318405000
+        ],
+        [
+          1703318405000,
+          1703347204000
+        ],
+        [
+          1703376004000,
+          1703404805000
+        ],
+        [
+          1703404805000,
+          1703433604000
+        ],
+        [
+          1703433604000,
+          1703462405000
+        ],
+        [
+          1703491205000,
+          1703520004000
+        ],
+        [
+          1703548804000,
+          1703577605000
+        ],
+        [
+          1703577605000,
+          1703606404000
+        ],
+        [
+          1703635204000,
+          1703664005000
+        ],
+        [
+          1703664005000,
+          1703692804000
+        ],
+        [
+          1703721604000,
+          1703750405000
+        ],
+        [
+          1703750405000,
+          1703779204000
+        ],
+        [
+          1703923204000,
+          1703952003000
+        ],
+        [
+          1703952003000,
+          1703980804000
+        ],
+        [
+          1704153604000,
+          1704182405000
+        ],
+        [
+          1704182405000,
+          1704211204000
+        ],
+        [
+          1704268804000,
+          1704297605000
+        ],
+        [
+          1704297605000,
+          1704326404000
+        ],
+        [
+          1704326404000,
+          1704355205000
+        ],
+        [
+          1704355205000,
+          1704384004000
+        ],
+        [
+          1704412804000,
+          1704441605000
+        ],
+        [
+          1704441605000,
+          1704470404000
+        ],
+        [
+          1704499204000,
+          1704528005000
+        ],
+        [
+          1704528005000,
+          1704556804000
+        ],
+        [
+          1704585604000,
+          1704614405000
+        ],
+        [
+          1704614405000,
+          1704643204000
+        ],
+        [
+          1704873604000,
+          1704902407000
+        ],
+        [
+          1704902407000,
+          1704931204000
+        ],
+        [
+          1705017604000,
+          1705046405000
+        ],
+        [
+          1705046405000,
+          1705075204000
+        ],
+        [
+          1705104004000,
+          1705132805000
+        ],
+        [
+          1705132805000,
+          1705161604000
+        ],
+        [
+          1705478404000,
+          1705507200000
+        ]
+      ]
+    }
+  ]
+}
