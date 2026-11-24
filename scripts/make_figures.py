@@ -18,8 +18,22 @@ therefore reads only
     replication set, and (for fig3) the in-sample spot leg and funding, all
     through research.pipeline.load_set_data and only after verify_inputs
     has matched every file against Appendix A's or its committed manifest's
-    SHA-256. A figure cannot come from a different download than the
-    results did.
+    SHA-256. Without --insample-from, a figure cannot come from a different
+    download than the results did.
+
+Appendix A's in-sample candles are not in the repository, since OKX's API
+Agreement (§9.4) does not allow its market data to be redistributed, and a
+new download of that year matches them value for value but not byte for
+byte. With --insample-from DIR, a reader's own download of the in-sample
+year by fetch_v2.py (DIR/<instId>/<file>) is read in place of the in-sample
+files, as scripts/verify_results.py reads it: each supplement file only
+over the span its manifest records, and nothing is drawn unless every file
+is there, the candles of both legs cover the in-sample year's warm-up and
+window, and the funding holds as many settlements over its span as the
+run's file did. The script names the files whose bytes differ from those
+the results were computed from; their figures are checked by value. Figures
+drawn from such a download that are byte-identical to the committed ones
+show that the figures follow from OKX's public data.
 
 The factor values behind fig3 come from research.pipeline.prepare_frames,
 the code path of the in-sample run itself: same bars, same warm-up, same
@@ -62,21 +76,25 @@ versions it ran with.
 
 Usage:
     python scripts/make_figures.py --out docs/figures
+    python scripts/make_figures.py --out /tmp/figures --insample-from data/history/insample_fresh
 """
 from __future__ import annotations
 
 import argparse
 import atexit
+import json
 import math
 import os
 import shutil
 import sys
 import tempfile
 import textwrap
-from dataclasses import dataclass
+from contextlib import contextmanager
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
+from unittest import mock
 
 
 def _repo_root() -> Path:
@@ -114,9 +132,11 @@ from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.ticker import FuncFormatter, MultipleLocator
 
+from research import pipeline
 from research import stats as S
 from research.bars import bar_ms
 from research.freeze import INSAMPLE_COLUMNS
+from research.io import sha256_file
 from research.pipeline import (
     INSAMPLE_RESULTS, OOS_COLUMNS, ROLE_IS, ROLE_PRIMARY, ROLE_REPLICATION, StudyParams,
     Window, load_set_data, oos_results_path, prepare_frames, set_with_role, verify_inputs,
@@ -369,6 +389,100 @@ def require_verified(set_names: Sequence[str]) -> None:
         problems = verify_inputs(name)
         if problems:
             raise SystemExit(f"inputs of {name} do not match their committed hashes:\n  " + "\n  ".join(problems))
+
+
+def insample_file(f: Any, root: Path, spec: Optional[Dict[str, Any]] = None) -> bool:
+    """Whether ``f``, a pipeline.InputFile, is Appendix A's in-sample candles or a file of the supplement."""
+    root = Path(root)
+    return (f.path.parent == root / (spec or get_spec())["insample_dir"]
+            or f.path.parent.parent == root / pipeline.IS_SUPP_DIR)
+
+
+def supplement_records(root: Path) -> Dict[Path, Dict[str, Any]]:
+    """The in-sample supplement's manifest by file: what the run read of each (SHA-256, rows, first and last)."""
+    series = json.loads((Path(root) / pipeline.IS_SUPP_MANIFEST).read_text(encoding="utf-8"))["series"]
+    return {Path(root) / e["path"]: e for e in series}
+
+
+def spanned(f: Any, record: Optional[Dict[str, Any]]) -> Any:
+    """``f`` read only over the span its manifest ``record`` says the run's file covered (all of it without one)."""
+    if record is None:
+        return f
+    lo, hi = int(record["first_ts"]), int(record["last_ts"]) + 1
+    return replace(f, lo_ms=lo if f.lo_ms is None else max(f.lo_ms, lo),
+                   hi_ms=hi if f.hi_ms is None else min(f.hi_ms, hi))
+
+
+@contextmanager
+def reading_fresh(fresh: Optional[Path]) -> Any:
+    """
+    research.pipeline as the results had it when ``fresh`` is None. Otherwise
+    every in-sample file is read from ``fresh`` (fetch_v2's
+    <out-dir>/<instId>/<file>) instead, a supplement file only over the span
+    its manifest records, through the pipeline's own loader.
+    """
+    if fresh is None:
+        yield
+        return
+    files = pipeline.input_files
+
+    def input_files(set_name, root=pipeline.REPO_ROOT, *, spec=None, is_end_ms=None):
+        out, records = [], None
+        for f in files(set_name, root, spec=spec, is_end_ms=is_end_ms):
+            if insample_file(f, root, spec):
+                records = supplement_records(root) if records is None else records
+                f = spanned(replace(f, path=fresh / f.path.parent.name / f.path.name), records.get(f.path))
+            out.append(f)
+        return out
+
+    with mock.patch.object(pipeline, "input_files", input_files):
+        yield
+
+
+def check_fresh(fresh: Path, is_name: str, window: Window) -> List[str]:
+    """
+    Stop unless ``fresh`` holds every in-sample file the in-sample year
+    reads: the candles of both legs covering its warm-up and window, and the
+    funding holding as many settlements, over the span the supplement's
+    manifest records, as the run's file did. Returns the files whose bytes
+    differ from those the results were computed from: Appendix A's SHA-256
+    for the candles, the supplement manifest's for the rest.
+    """
+    root, sp = pipeline.REPO_ROOT, get_spec()
+    try:
+        records = supplement_records(root)
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise SystemExit(f"--insample-from: {pipeline.IS_SUPP_MANIFEST.as_posix()} cannot be read: {exc}")
+    known = {p: str(e["sha256"]) for p, e in records.items()}
+    known.update({root / sp["insample_dir"] / name: str(digest) for name, digest in sp["insample_sha256"].items()})
+    other: List[str] = []
+    for f in pipeline.input_files(is_name, root):
+        if not insample_file(f, root, sp):
+            continue
+        src = fresh / f.path.parent.name / f.path.name
+        if not src.is_file():
+            raise SystemExit(f"--insample-from: {src} does not exist")
+        try:
+            ts = pl.read_parquet(src, columns=["timestamp"])["timestamp"].cast(pl.Int64)
+        except Exception as exc:  # not a file fetch_v2 writes, whatever polars calls the failure
+            raise SystemExit(f"--insample-from: {src} cannot be read: {exc}")
+        if f.kind == "funding":
+            record = records.get(f.path)
+            if record is None:
+                raise SystemExit(f"--insample-from: {src} has no counterpart in the supplement's manifest")
+            lo, hi, rows = (int(record[k]) for k in ("first_ts", "last_ts", "rows"))
+            held = int(((ts >= lo) & (ts <= hi)).sum())
+            if held != rows:
+                raise SystemExit(f"--insample-from: {src} holds {held} settlements from {_datetime(lo)} to "
+                                 f"{_datetime(hi)} UTC, where the run's file held {rows} (OKX's REST funding "
+                                 "history reaches back about three months; fetch_v2.py --allow-test-data takes "
+                                 "the months before that from OKX's archive)")
+        elif not (ts.len() and ts.min() <= window.warmup_start_ms and ts.max() >= window.end_ms - MINUTE_MS):
+            raise SystemExit(f"--insample-from: {src} does not cover the in-sample year's warm-up and window, "
+                             f"{_datetime(window.warmup_start_ms)} to {_datetime(window.end_ms)} UTC")
+        if sha256_file(src) != known.get(f.path):
+            other.append(f.path.relative_to(root).as_posix())
+    return other
 
 
 def minute_returns(candles: pl.DataFrame, lo_ms: int, hi_ms: int) -> Tuple[np.ndarray, int]:
@@ -905,6 +1019,8 @@ def renderer_versions() -> str:
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Draw the report's four figures from committed results.")
     p.add_argument("--out", required=True, type=Path, help="directory for the PNG files (created if absent)")
+    p.add_argument("--insample-from", type=Path, metavar="DIR", dest="insample_from",
+                   help="a download of the in-sample year by fetch_v2.py, read in place of the in-sample files")
     return p.parse_args(argv)
 
 
@@ -914,7 +1030,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     params = StudyParams.from_spec(spec)
     is_name, primary, replication = (set_with_role(r, spec) for r in (ROLE_IS, ROLE_PRIMARY, ROLE_REPLICATION))
     w_is, w_p, w_r = (window_of(s, spec) for s in (is_name, primary, replication))
-    require_verified([is_name, primary, replication])
+    fresh = args.insample_from.resolve() if args.insample_from is not None else None
+    require_verified([primary, replication] if fresh is not None else [is_name, primary, replication])
+    if fresh is not None:
+        other = check_fresh(fresh, is_name, w_is)
+        print(f"in-sample files read from {fresh}" + (
+            f"; these have other bytes than the results were computed from, so the figures check them by value: "
+            f"{', '.join(other)}" if other else ", each with the bytes the results were computed from"))
     out = args.out
     out.mkdir(parents=True, exist_ok=True)
     _apply_style()
@@ -926,7 +1048,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     is_eval = f"{_date(w_is.start_ms)} → {_date(w_is.end_ms)}"
     primary_span = f"{_date(w_p.start_ms)} → {_date(w_p.end_ms)}"
 
-    data_is = load_set_data(is_name)
+    with reading_fresh(fresh):
+        data_is = load_set_data(is_name)
     [inst] = data_is["instruments"]
     years = [
         year_of("primary test year", load_set_data(primary)["perp"][inst], w_p.start_ms, w_p.end_ms),

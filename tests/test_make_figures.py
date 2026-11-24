@@ -14,6 +14,12 @@ the ``drawn`` fixture replaces so that each Figure is kept rather than
 written. The smoke tests write real files and check only that they are
 PNGs of the page's width without the version metadata, and that the same
 inputs drawn twice on one machine give the same bytes.
+
+A reader's own download of the in-sample year (--insample-from) is checked on
+small files in fetch_v2's layout: that it is read for the in-sample files
+only, which of its files are named as differing from the run's bytes, that a
+missing file or a short year stops the script, and that main() checks it, in
+place of the in-sample hashes, before anything is drawn.
 """
 from __future__ import annotations
 
@@ -908,3 +914,113 @@ class TestMain:
         with pytest.raises(SystemExit, match=f"inputs of {bad} do not match their committed hashes"):
             mf.main(["--out", str(out)])
         assert not out.exists() and fake.loaded == [] and fake.prepared == []
+
+
+# ---------------------------------------------------------------- a reader's download of the in-sample year
+
+IS_WINDOW = mf.window_of(IS_SET)
+INPUT_FILES = mf.pipeline.input_files                    # the pipeline's own, before any test replaces it
+# Each in-sample file with its counterpart in a fetch_v2 download (<out-dir>/<instId>/<file>).
+COUNTERPARTS = [("data/history/DOGE-USDT-SWAP/candles_1m.parquet", "DOGE-USDT-SWAP/candles_1m.parquet"),
+                ("data/history/is_supp/DOGE-USDT/candles_1m.parquet", "DOGE-USDT/candles_1m.parquet"),
+                ("data/history/is_supp/DOGE-USDT-SWAP/funding_rates.parquet", "DOGE-USDT-SWAP/funding_rates.parquet")]
+
+
+def download(path, first=IS_WINDOW.warmup_start_ms, leave_out=()):
+    """Small files in fetch_v2's layout, whose minutes run from ``first`` to the in-sample year's last."""
+    for _, rel in COUNTERPARTS:
+        if rel not in leave_out:
+            (path / rel).parent.mkdir(parents=True, exist_ok=True)
+            pl.DataFrame({"timestamp": [first, IS_WINDOW.end_ms - MINUTE], "close": [1.0, 1.0]}).write_parquet(
+                path / rel)
+    return path
+
+
+def supplement_manifest(root, fresh):
+    """results/manifest_is_supp.json under ``root``, recording the supplement's counterparts in ``fresh`` as they are."""
+    series = []
+    for rel, twin in COUNTERPARTS[1:]:
+        ts = pl.read_parquet(fresh / twin)["timestamp"]
+        series.append({"path": rel, "sha256": mf.sha256_file(fresh / twin), "rows": ts.len(),
+                       "first_ts": int(ts.min()), "last_ts": int(ts.max())})
+    (root / "results").mkdir(parents=True)
+    (root / "results" / "manifest_is_supp.json").write_text(json.dumps({"series": series}), encoding="utf-8")
+    return root
+
+
+class TestInSampleDownload:
+    def test_it_is_read_for_the_in_sample_files_only(self, tmp_path):
+        fresh = download(tmp_path / "fresh")
+        root = supplement_manifest(tmp_path / "repo", fresh)
+        before = {n: mf.pipeline.input_files(n, root) for n in (IS_SET, PRIMARY, REPLICATION)}
+        with mf.reading_fresh(fresh):
+            during = {n: mf.pipeline.input_files(n, root) for n in before}
+        assert mf.pipeline.input_files is INPUT_FILES
+        assert {n: [(b.path.relative_to(root).as_posix(), d.path.relative_to(fresh).as_posix())
+                    for b, d in zip(before[n], during[n]) if d.path != b.path] for n in before} == {
+            IS_SET: COUNTERPARTS, PRIMARY: [], REPLICATION: []}
+        # The supplement's files only over the span its manifest records.
+        span = (IS_WINDOW.warmup_start_ms, IS_WINDOW.end_ms - MINUTE + 1)
+        assert [(d.lo_ms, d.hi_ms) for d in during[IS_SET]] == [(None, None), span, span]
+        with mf.reading_fresh(None):
+            assert mf.pipeline.input_files is INPUT_FILES
+
+    def test_the_files_whose_bytes_differ_from_the_runs_are_named(self, monkeypatch, tmp_path):
+        fresh = download(tmp_path / "fresh")
+        root = supplement_manifest(tmp_path / "repo", fresh)
+        monkeypatch.setattr(mf.pipeline, "REPO_ROOT", root)
+        # The supplement's two files have the bytes its manifest records; the candles cannot have Appendix A's.
+        assert mf.check_fresh(fresh, IS_SET, IS_WINDOW) == [COUNTERPARTS[0][0]]
+
+    @pytest.mark.parametrize("leave_out,first,needle", [
+        (("DOGE-USDT/candles_1m.parquet",), IS_WINDOW.warmup_start_ms, "DOGE-USDT/candles_1m.parquet does not exist"),
+        ((), IS_WINDOW.warmup_start_ms + MINUTE,
+         "does not cover the in-sample year's warm-up and window, 2025-09-24 00:00 to 2026-09-23 20:00 UTC"),
+    ])
+    def test_a_missing_file_or_a_short_year_stops_it(self, monkeypatch, tmp_path, leave_out, first, needle):
+        monkeypatch.setattr(mf.pipeline, "REPO_ROOT", supplement_manifest(tmp_path / "repo", download(tmp_path / "twin")))
+        fresh = download(tmp_path / "fresh", first=first, leave_out=leave_out)
+        with pytest.raises(SystemExit, match=re.escape(needle)):
+            mf.check_fresh(fresh, IS_SET, IS_WINDOW)
+
+    def test_funding_short_of_the_runs_settlements_stops_it(self, monkeypatch, tmp_path):
+        fresh = download(tmp_path / "fresh")
+        monkeypatch.setattr(mf.pipeline, "REPO_ROOT", supplement_manifest(tmp_path / "repo", fresh))
+        pl.DataFrame({"timestamp": [IS_WINDOW.warmup_start_ms]}).write_parquet(fresh / COUNTERPARTS[2][1])
+        with pytest.raises(SystemExit, match=re.escape("holds 1 settlements from 2025-09-24 00:00 to 2026-09-23 "
+                                                       "19:59 UTC, where the run's file held 2")):
+            mf.check_fresh(fresh, IS_SET, IS_WINDOW)
+
+    def test_main_reads_it_in_place_of_the_in_sample_files(self, tmp_path, monkeypatch, capsys):
+        fake = FakeInputs().install(monkeypatch)
+        fresh, checked, swapped = tmp_path / "fresh", [], []
+        fresh.mkdir()
+        monkeypatch.setattr(mf, "check_fresh",
+                            lambda f, name, window: checked.append((f, name, window)) or ["x.parquet"])
+
+        def load_set_data(set_name):
+            swapped.append((set_name, mf.pipeline.input_files is not INPUT_FILES))
+            return fake.load_set_data(set_name)
+
+        monkeypatch.setattr(mf, "load_set_data", load_set_data)
+        out = tmp_path / "figures"
+        assert mf.main(["--out", str(out), "--insample-from", str(fresh)]) == 0
+        # The in-sample year's files are checked against the download, not against their hashes.
+        assert sorted(fake.verified) == sorted([PRIMARY, REPLICATION])
+        assert checked == [(fresh.resolve(), IS_SET, IS_WINDOW)]
+        assert sorted(swapped) == sorted([(IS_SET, True), (PRIMARY, False), (REPLICATION, False)])
+        assert (f"in-sample files read from {fresh.resolve()}; these have other bytes than the results were "
+                "computed from, so the figures check them by value: x.parquet") in capsys.readouterr().out
+        assert sorted(p.name for p in out.iterdir()) == sorted(mf.FIGURE_NAMES)
+
+    def test_a_download_that_fails_its_check_stops_it_before_anything_is_written(self, tmp_path, monkeypatch):
+        fake = FakeInputs().install(monkeypatch)
+
+        def refuse(f, name, window):
+            raise SystemExit("--insample-from: x does not exist")
+
+        monkeypatch.setattr(mf, "check_fresh", refuse)
+        out = tmp_path / "figures"
+        with pytest.raises(SystemExit, match="x does not exist"):
+            mf.main(["--out", str(out), "--insample-from", str(tmp_path)])
+        assert not out.exists() and fake.loaded == []

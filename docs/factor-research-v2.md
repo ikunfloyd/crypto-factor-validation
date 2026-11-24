@@ -313,8 +313,8 @@ python scripts/fetch_maker_probe.py                # the probe's 56 archive file
 python scripts/run_maker_probe.py --verify         # recompute the probe; keeps no file
 ```
 
-`--set all`, `--set insample_v2`, `--set doge_fwd` and `scripts/make_figures.py` also need the
-in-sample files (below).
+`--set all`, `--set insample_v2`, `--set doge_fwd` and `scripts/make_figures.py` also read the
+in-sample year, which a reader downloads (below).
 
 `scripts/verify_results.py` checks each input file against the SHA-256 in its committed manifest,
 recomputes the results through the code path the committed run used, and compares every column of
@@ -336,10 +336,17 @@ window ends when it runs, so they cannot be downloaded again byte for byte; thei
 the pre-registration's Appendix A. The supplement in `data/history/is_supp/` came from
 `fetch_v2.py`, with its SHA-256 in `results/manifest_is_supp.json`. A download of the same year with
 `fetch_v2.py` on 2026-11-24 matched the main files value for value: all 525,598 one-minute candles
-the two share, and all 280 funding settlements. The files themselves are not in the repository, so
-for `insample_v2`, `doge_fwd` and the figures a reader has to rely on that check. It limits what a
-reader can recompute, not the test: the directions were frozen and published before any test set
-was downloaded.
+the two share, and all 280 funding settlements. The files themselves are not in the repository,
+because OKX's API Agreement (§9.4) does not allow its market data to be redistributed. Instead
+`verify_results.py` and `make_figures.py` take `--insample-from`, a reader's own download of the
+year with `fetch_v2.py` (the command is in the README). The supplement's spot leg comes out byte for
+byte. The candles stand in by value, and so does the funding, which that command takes from OKX's
+archive and which starts a few days before the run's file; it is read only over the span the
+supplement's manifest records. The verdict is therefore INCOMPLETE rather than PASS. On
+2026-11-24 such a download reproduced `results/insample_v2.csv` and `results/oos/doge_fwd.csv` byte
+for byte, and the four figures. What it cannot show is that the run read those bytes: that rests
+on Appendix A's hashes, which the run checked. It limits what a reader can check, not the test: the
+directions were frozen and published before any test set was downloaded.
 
 The maker probe's 56 archive files are listed, with their URLs and SHA-256, in
 `results/maker_probe/manifest_archives.json`. `python scripts/fetch_maker_probe.py` fetches them and

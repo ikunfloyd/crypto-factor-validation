@@ -34,12 +34,12 @@
 
 - **先公开计划，再下载检验集。** [预注册文件](docs/preregistration.md)固定了 60 个单元、统计量和判定规则，于 2026-10-12 07:37 UTC 以 [GitHub Release](https://github.com/ikunfloyd/crypto-factor-validation/releases/tag/prereg-publication) 的形式公开，早于检验集的下载。它的 §3 列出了此前每一次接触检验期数据的情况，包括规划阶段下载过的、落在检验期内的几个存档文件。
 - **冻结，并独立存档。** 每个单元的交易方向由样本内年份确定，写入 `results/insample_v2.csv`，所在提交打上 `prereg-freeze` 标签；方向连同每个单元的最小可检测效应，一起抄入[冻结补充文件](docs/preregistration-freeze.md)。Software Heritage 于 08:55 UTC 存档了发布提交和冻结提交（[`swh:1:snp:7baf60bb…`](https://archive.softwareheritage.org/swh:1:snp:7baf60bb2da0a53f8120a3ff56074ac410fb1b28)）。这次存档早于冻结补充文件（09:01），而下载脚本要等冻结补充文件出现在公开的 `main` 上才肯下载检验数据，所以存档早于任何一个检验集的下载。
-- **每个检验集只跑一次，由代码把关。** 只要出现以下任一情况，[`scripts/run_oos.py`](scripts/run_oos.py) 就拒绝运行：打标签之后 `docs/` 和 `results/` 以外有文件改动；某个输入文件的 SHA-256 与该检验集已提交的清单不符；该检验集的结果已经存在，或曾经提交过。这些检查能拦住失误，并让任何偏离都只能是有意为之，但拦不住掌控这台机器的作者本人。每个检验集只运行一次、没有重跑，这一点靠的是公开的提交记录，以及结果能用公开数据复现（能做到哪一步，见「复现」）。
+- **每个检验集只跑一次，由代码把关。** 只要出现以下任一情况，[`scripts/run_oos.py`](scripts/run_oos.py) 就拒绝运行：打标签之后 `docs/` 和 `results/` 以外有文件改动；某个输入文件的 SHA-256 与该检验集已提交的清单不符；该检验集的结果已经存在，或曾经提交过。这些检查能拦住失误，并让任何偏离都只能是有意为之，但拦不住掌控这台机器的作者本人。每个检验集只运行一次、没有重跑，这一点靠的是公开的提交记录，以及结果能用公开数据复现（怎么复现、能做到哪一步，见「复现」）。
 - **逐条对照计划。** [结果对照](docs/preregistration-results.md)把每项结果与预注册里「检验什么、如何解读」逐条比较。所有偏离都按日期记在预注册的偏离日志（§12）里。
 
 **复现**
 
-主检验集可以用 OKX 的公开数据核对，无需 API 密钥。两个脚本都要通过 git 核对冻结记录，所以需要公开仓库的完整克隆（不能是 fork、浅克隆或 ZIP 包）：
+每个结果文件和每张图都能用 OKX 的公开数据重新算出，无需 API 密钥。这些脚本都要通过 git 核对冻结记录，所以需要公开仓库的完整克隆（不能是 fork、浅克隆或 ZIP 包）。以主检验集为例：
 
 ```bash
 git clone https://github.com/ikunfloyd/crypto-factor-validation.git && cd crypto-factor-validation
@@ -52,7 +52,19 @@ python scripts/verify_results.py --set doge_2023
 
 - **下载。** `fetch_v2.py` 把主检验集下载到被 git 忽略的 `data/history/oos/doge_2023/`。清单写到临时路径，因为已提交的清单 `results/oos/manifest_doge_2023.json` 已经存在，而 `fetch_v2.py` 从不覆盖文件。2026-11-24 在 `doge_2023` 和 `doge_fwd` 上核对过：重新下载的每个文件，SHA-256 都与已提交的清单一致，也就是逐字节相同。其他检验集的下载命令见该脚本开头的文档字符串。
 - **校验。** `verify_results.py` 用已提交清单中的 SHA-256 逐一校验输入文件，沿已提交那次运行的代码路径重新计算，再与 `results/oos/doge_2023.csv` 及其稳健性文件逐列比对，不写入任何文件。缺少提交历史或 `prereg-freeze` 标签时，部分检查无法进行，结论是 INCOMPLETE。
-- **样本内文件。** `--set insample_v2` 要读取样本内文件（`data/history/DOGE-USDT-SWAP/` 和补充数据 `data/history/is_supp/`），`--set doge_fwd` 的预热期也要读取。主文件出自更早的下载脚本，无法逐字节重新下载；它们的 SHA-256 记在预注册文件的附录 A 里，文件本身不在仓库中。2026-11-24 用 `fetch_v2.py` 重新下载同一年的数据，与主文件中的 K 线和资金费率逐值一致：两者共有的每一根 1 分钟 K 线、每一次资金费率结算都相同。
+- **样本内年份。** `--set insample_v2`、`--set doge_fwd`（读它的预热期）和 `scripts/make_figures.py` 都要读取样本内年份的数据。其中的 K 线出自更早的下载脚本：重新下载的数据与它逐值一致，但不是逐字节相同；它的 SHA-256 记在预注册文件的附录 A 里。这份文件不在仓库中，因为 OKX 的 API 协议（§9.4）不允许再分发其行情数据。请自己下载这一年的数据，用 `--insample-from` 传给脚本（`doge_fwd` 还需要它自己的文件，画图还需要 `doge_2023` 和 `doge_2024`）：
+
+  ```bash
+  python scripts/fetch_v2.py --candles DOGE-USDT-SWAP DOGE-USDT --funding DOGE-USDT-SWAP \
+      --start '2025-09-24 00:00' --end '2026-09-23 20:00' --allow-test-data \
+      --out-dir data/history/insample_fresh --manifest /tmp/manifest_insample_fresh.json
+  python scripts/verify_results.py --set insample_v2 --insample-from data/history/insample_fresh
+  python scripts/verify_results.py --set doge_fwd --insample-from data/history/insample_fresh
+  python scripts/make_figures.py --out /tmp/figures --insample-from data/history/insample_fresh
+  for f in docs/figures/*.png; do cmp "$f" "/tmp/figures/${f##*/}"; done   # 一致时没有输出
+  ```
+
+  加上 `--allow-test-data`，脚本才会读取 OKX 资金费率月度存档里与检验集重叠的 2025 年 9 月和 2026 年 9 月；不加的话，2026 年 9 月要走 OKX 的 REST 接口，而它只能回溯大约三个月。现货文件下载下来，与运行时读取的逐字节相同。K 线按数值替代；资金费率也一样，它比运行时的文件早几天开始，复核时只读取补充数据清单记录的时间范围。因此结论是 INCOMPLETE 而不是 PASS：每一列都一致，说明已提交的结果能由 OKX 的公开数据经冻结的代码算出，但不能说明运行时读的就是这些字节。2026-11-24 用这种方式重新下载，`results/insample_v2.csv` 和 `results/oos/doge_fwd.csv` 都逐字节重现；用 `environment.yml` 中的 matplotlib 和 Pillow 画出的四张图，也与已提交的逐字节相同。
 - **maker 探针。** `python scripts/fetch_maker_probe.py` 下载探针的 56 个存档文件（5.2 GB），并用已提交的 SHA-256 逐一校验；之后 `python scripts/run_maker_probe.py --verify` 重新计算探针，与已提交的每个输出比对（记录运行耗时的一列除外）。
 
 ## 研究详情
@@ -202,7 +214,7 @@ scripts/         引擎：demo.py、benchmark.py
                        write_freeze_amendment.py
                  maker 探针：fetch_maker_probe.py、run_maker_probe.py
                  供读者复核（结果、结果对照中的数字、图；图和 insample_v2、doge_fwd 的结果
-                       还需要未公开的样本内文件）：verify_results.py、summarize_results.py、
+                       还要读取读者自己下载的样本内年份）：verify_results.py、summarize_results.py、
                        make_figures.py
                  v1：fetch_history.py、factor_research.py
 tests/           交易引擎和研究的 pytest 测试（见「测试」）

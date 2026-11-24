@@ -79,23 +79,44 @@ checks cannot be made. They are reported as NOT CHECKED, with what would
 make them possible, and the overall verdict is then INCOMPLETE, never PASS.
 FAIL is kept for a check that was made and found something wrong.
 
+A reader's download of the in-sample year (``--insample-from``). Appendix A's
+in-sample candles came from an earlier downloader: a download of the same
+year by fetch_v2.py matches them value for value but not byte for byte, and
+the file is not in the repository, since OKX's API Agreement (§9.4) does not
+allow its market data to be redistributed. With --insample-from DIR, a
+download in fetch_v2's layout (DIR/<instId>/<file>) is read wherever
+insample_v2, or doge_fwd's warm-up, would read an in-sample file: the
+candles, and the supplement's spot leg and funding, each supplement file
+only over the span its manifest records for the run's file. Each must be
+there, the candles of both legs must cover the in-sample year's warm-up and
+window, and the funding must hold as many settlements over that span as the
+run's file did, or the set FAILs before any computation. A file with the
+bytes the run read (Appendix A's SHA-256 for the candles,
+results/manifest_is_supp.json's for the others) passes as usual. One with
+other bytes stands in by value: if every column matches, the committed
+results follow from that download through the tag's code, but nothing shows
+that the run read it, so its check is NOT CHECKED and the set INCOMPLETE at
+best.
+
 Usage:
     python scripts/verify_results.py --set insample_v2
     python scripts/verify_results.py --set doge_2023
     python scripts/verify_results.py --set all
+    python scripts/verify_results.py --set insample_v2 --insample-from data/history/insample_fresh
 
 Exit status: 0 PASS, 1 FAIL, 2 usage error, 3 INCOMPLETE, 4 TOLERATED.
 """
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import os
 import platform
 import sys
 import time
-from contextlib import nullcontext
-from dataclasses import dataclass, field
+from contextlib import contextmanager, nullcontext
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 from unittest import mock
@@ -152,7 +173,7 @@ with (mock.patch.object(numba.core.caching._CacheLocator, "ensure_cache_path", l
 from research import freeze, gitrepo, integrity, pipeline, stats  # noqa: E402
 from research import io as research_io  # noqa: E402
 from research.io import sha256_file  # noqa: E402
-from research.spec import get_spec  # noqa: E402
+from research.spec import MINUTE_MS, get_spec  # noqa: E402
 
 # The run script's guards and comparison rule, loaded from this checkout.
 run_oos = integrity.load_script(REPO_ROOT, "run_oos")
@@ -801,21 +822,196 @@ def compare(committed: str, recomputed: pl.DataFrame, keys: Sequence[str],
     return summary, out
 
 
+# ---------------------------------------------------------------- a reader's download of the in-sample year
+
+FRESH_CHECK = "in-sample files"    # the check of a reader's download (--insample-from)
+
+
+def is_insample_file(f: Any, root: Path, spec: Optional[Dict[str, Any]] = None) -> bool:
+    """Whether ``f``, a pipeline.InputFile, is an in-sample file: Appendix A's candles or the supplement's."""
+    root = Path(root)
+    return (f.path.parent == root / (spec or get_spec())["insample_dir"]
+            or f.path.parent.parent == root / pipeline.IS_SUPP_DIR)
+
+
+def fresh_path(f: Any, fresh: Path) -> Path:
+    """Where fetch_v2 puts the series of ``f`` under ``fresh``: <out-dir>/<instId>/<file>."""
+    return Path(fresh) / f.path.parent.name / f.path.name
+
+
+def reads_insample(set_name: str, root: Path) -> bool:
+    """Whether the set reads in-sample files: the in-sample year, and doge_fwd for its warm-up."""
+    return any(is_insample_file(f, root) for f in pipeline.input_files(pipeline_set(set_name), root))
+
+
+def supplement_records(root: Path) -> Dict[Path, Dict[str, Any]]:
+    """The in-sample supplement's manifest by file: what the run read of each (SHA-256, rows, first and last)."""
+    series = json.loads((Path(root) / pipeline.IS_SUPP_MANIFEST).read_text(encoding="utf-8"))["series"]
+    return {Path(root) / e["path"]: e for e in series}
+
+
+def spanned(f: Any, record: Optional[Dict[str, Any]]) -> Any:
+    """``f`` read only over the span its manifest ``record`` says the run's file covered (all of it without one)."""
+    if record is None:
+        return f
+    lo, hi = int(record["first_ts"]), int(record["last_ts"]) + 1
+    return replace(f, lo_ms=lo if f.lo_ms is None else max(f.lo_ms, lo),
+                   hi_ms=hi if f.hi_ms is None else min(f.hi_ms, hi))
+
+
+@contextmanager
+def fresh_insample(fresh: Optional[Path], mode: str) -> Any:
+    """
+    research.pipeline as the run had it when ``fresh`` is None. Otherwise
+    every in-sample file a set would read comes from ``fresh`` instead (mode
+    "read"), a supplement file only over the span its manifest records, so
+    that a download reaching further is read as the run read its file. Or
+    the in-sample files are left out of the checks, with the supplement's
+    manifest (mode "check"), so that the checks of the set's other files run
+    unchanged. Both replace functions the pipeline itself calls, so the code
+    that loads and checks the files is the run's.
+    """
+    if fresh is None:
+        yield
+        return
+    files, manifests = pipeline.input_files, pipeline.manifests_required
+
+    def input_files(set_name, root=pipeline.REPO_ROOT, *, spec=None, is_end_ms=None):
+        out, records = [], None
+        for f in files(set_name, root, spec=spec, is_end_ms=is_end_ms):
+            if is_insample_file(f, root, spec):
+                if mode == "check":
+                    continue
+                records = supplement_records(root) if records is None else records
+                f = spanned(replace(f, path=fresh_path(f, fresh)), records.get(f.path))
+            out.append(f)
+        return out
+
+    def manifests_required(set_name, spec=None):
+        return [m for m in manifests(set_name, spec) if m != pipeline.IS_SUPP_MANIFEST]
+
+    with mock.patch.object(pipeline, "input_files", input_files), \
+            (mock.patch.object(pipeline, "manifests_required", manifests_required) if mode == "check"
+             else nullcontext()):
+        yield
+
+
+def _utc(ms: int) -> str:
+    return time.strftime("%Y-%m-%d %H:%M", time.gmtime(ms / 1000))
+
+
+def candles_problem(ts: Any, window: Any) -> Optional[str]:
+    """Why candles at the minutes ``ts`` (a polars Series) cannot stand in for the in-sample year's, or None."""
+    need = (window.warmup_start_ms, window.end_ms - MINUTE_MS)
+    if ts.len() and ts.min() <= need[0] and ts.max() >= need[1]:
+        return None
+    have = f"{_utc(ts.min())} to {_utc(ts.max())}" if ts.len() else "no rows"
+    return f"covers {have}, and the in-sample year needs {_utc(need[0])} to {_utc(need[1])} UTC"
+
+
+def funding_problem(ts: Any, record: Optional[Dict[str, Any]]) -> Optional[str]:
+    """Why settlements at ``ts`` cannot stand in for the run's funding file as its manifest records it, or None."""
+    if record is None:
+        return "has no counterpart in the supplement's manifest"
+    lo, hi, rows = int(record["first_ts"]), int(record["last_ts"]), int(record["rows"])
+    held = int(((ts >= lo) & (ts <= hi)).sum())
+    if held == rows:
+        return None
+    return (f"holds {held} settlements from {_utc(lo)} to {_utc(hi)} UTC, where the run's file held {rows} (OKX's "
+            "REST funding history reaches back about three months; fetch_v2.py --allow-test-data takes the "
+            "months before that from OKX's archive)")
+
+
+def fresh_check(root: Path, fresh: Path) -> Check:
+    """
+    A reader's download against the in-sample files it stands in for. Each
+    must be there; the candles of both legs must cover the in-sample year's
+    warm-up and window; and the funding must hold as many settlements, over
+    the span the supplement's manifest records, as the run's file did (FAIL
+    otherwise). Each file's SHA-256 is then compared with the one the run
+    read, Appendix A's for the candles and the supplement manifest's for the
+    rest: a file with other bytes stands in by value, which is NOT CHECKED.
+    """
+    sp = get_spec()
+    window = pipeline.window_of(pipeline_set(INSAMPLE), sp)
+    supp = pipeline.IS_SUPP_MANIFEST.as_posix()
+    try:
+        records = supplement_records(root)
+        known = {p: (str(e["sha256"]), f"{supp}'s") for p, e in records.items()}
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        return Check(FRESH_CHECK, FAIL, f"{supp} cannot be read: {exc}")
+    known.update({root / sp["insample_dir"] / name: (str(digest), "Appendix A's")
+                  for name, digest in sp["insample_sha256"].items()})
+    same: List[str] = []
+    other: List[str] = []
+    problems: List[str] = []
+    for f in pipeline.input_files(pipeline_set(INSAMPLE), root):
+        if not is_insample_file(f, root, sp):
+            continue
+        src, rel = fresh_path(f, fresh), f.path.relative_to(root).as_posix()
+        if not src.is_file():
+            problems.append(f"{src} does not exist; it would stand in for {rel}")
+            continue
+        try:
+            ts = pl.read_parquet(src, columns=["timestamp"])["timestamp"].cast(pl.Int64)
+            problem = (funding_problem(ts, records.get(f.path)) if f.kind == "funding"
+                       else candles_problem(ts, window))
+        except Exception as exc:  # not a file fetch_v2 writes, whatever polars calls the failure
+            problem = f"cannot be read: {exc}"
+        if problem:
+            problems.append(f"{src} {problem}; it would stand in for {rel}")
+            continue
+        digest, whose = known.get(f.path, (None, "no record's"))
+        (same if sha256_file(src) == digest else other).append(f"{rel} ({whose} SHA-256)")
+    if problems:
+        return Check(FRESH_CHECK, FAIL, "; ".join(problems))
+    head = f"read from {fresh}"
+    if not other:
+        return Check(FRESH_CHECK, PASS, f"{head}, each with the bytes the run read: {', '.join(same)}")
+    return Check(FRESH_CHECK, NOT_CHECKED,
+                 f"{head}. " + (f"With the bytes the run read: {', '.join(same)}. " if same else "")
+                 + f"With other bytes: {', '.join(other)}. Those stand in by value: matching columns show that the "
+                   "committed results follow from this download through the tag's code, not that the run read it")
+
+
+def fresh_inputs_check(root: Path, set_name: str, git_ok: bool, fresh: Path) -> List[Check]:
+    """
+    inputs_check with the in-sample files read from ``fresh``: the set's own
+    files as usual (doge_fwd's, guard 8 and all; the in-sample year has no
+    others), then the download.
+    """
+    own: List[Check] = []
+    if set_name != INSAMPLE:
+        with fresh_insample(fresh, "check"):
+            own = inputs_check(root, set_name, git_ok)
+        if any(c.verdict == FAIL for c in own):
+            return own
+    return own + [fresh_check(root, fresh)]
+
+
 # ---------------------------------------------------------------- one set
 
-def verify_set(root: Path, set_name: str, tag_commit: Optional[str], git_ok: bool) -> SetReport:
-    """Every check of one set, in order; a failed input or provenance check stops before the computation."""
+def verify_set(root: Path, set_name: str, tag_commit: Optional[str], git_ok: bool,
+               fresh: Optional[Path] = None) -> SetReport:
+    """
+    Every check of one set, in order; a failed input or provenance check
+    stops before the computation. ``fresh``, a reader's download of the
+    in-sample year (--insample-from), is read in place of the in-sample files.
+    """
     started = time.monotonic()
     name = pipeline_set(set_name)
     report = SetReport(set_name, pipeline.set_role(name))
     try:
-        _verify_into(report, root, set_name, tag_commit, git_ok)
+        _verify_into(report, root, set_name, tag_commit, git_ok, fresh)
     except Stop:
         pass
     except (run_oos.Refusal, pipeline.PipelineError, gitrepo.GitError, OSError) as exc:
         # A missing or unreadable file, or git failing, outside the checks
         # that word their own refusal: the set cannot be verified.
         report.checks.append(Check("error", FAIL, f"{type(exc).__name__}: {exc}"))
+    unchecked = [c.name for c in report.checks if c.verdict == NOT_CHECKED]
+    if report.verdict() == INCOMPLETE and unchecked == [FRESH_CHECK]:
+        report.notes.append(f"INCOMPLETE only because in-sample files stood in by value (see {FRESH_CHECK})")
     report.seconds = time.monotonic() - started
     return report
 
@@ -826,18 +1022,21 @@ def _require(report: SetReport, checks: Sequence[Check]) -> None:
         raise Stop()
 
 
-def _verify_into(report: SetReport, root: Path, set_name: str, tag_commit: Optional[str], git_ok: bool) -> None:
+def _verify_into(report: SetReport, root: Path, set_name: str, tag_commit: Optional[str], git_ok: bool,
+                 fresh: Optional[Path] = None) -> None:
     name = pipeline_set(set_name)
     rels = [p.as_posix() for p in results_paths(set_name)]
     if not (root / rels[0]).exists():
         _require(report, [Check("results", FAIL, f"{rels[0]} does not exist; this set has no committed results yet")])
-    _require(report, inputs_check(root, set_name, git_ok))
+    _require(report, inputs_check(root, set_name, git_ok) if fresh is None
+             else fresh_inputs_check(root, set_name, git_ok, fresh))
 
     if set_name == INSAMPLE:
         text, checks = insample_provenance(root, tag_commit)
         _require(report, checks)
         logger.info(f"{set_name}: recomputing (research.pipeline.run_insample)")
-        df = pipeline.run_insample(root)
+        with fresh_insample(fresh, "read"):
+            df = pipeline.run_insample(root)
         report.checks.append(code_check(root, tag_commit, REQUIRED_CODE))
         summary, table = compare(text, df, ("bar", "horizon", "factor"))
         report.tables.append((rels[0], summary, table))
@@ -848,8 +1047,10 @@ def _verify_into(report: SetReport, root: Path, set_name: str, tag_commit: Optio
     directions, mde, check = frozen_directions(root, tag_commit, prov.code_commit if tag_commit else None)
     _require(report, [check])
     logger.info(f"{set_name}: recomputing (research.pipeline.run_oos_set)")
-    main_df, robust_df = pipeline.run_oos_set(name, directions, root=root, mde_bps=mde,
-                                              code_commit=prov.code_commit, manifest_sha256=prov.manifest_sha256)
+    with fresh_insample(fresh, "read"):
+        main_df, robust_df = pipeline.run_oos_set(name, directions, root=root, mde_bps=mde,
+                                                  code_commit=prov.code_commit,
+                                                  manifest_sha256=prov.manifest_sha256)
     primary = pipeline.set_role(name) == pipeline.ROLE_PRIMARY
     report.checks.append(code_check(root, tag_commit, REQUIRED_CODE + (REQUIRED_CODE_PRIMARY if primary else ())))
     summary, table = compare(prov.texts[0], main_df, pipeline.KEY_COLUMNS, prov.column_notes)
@@ -901,6 +1102,10 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     )
     p.add_argument("--set", required=True, dest="set_name",
                    help="one of: " + ", ".join(known_sets()) + ", or all (every set with committed results)")
+    p.add_argument("--insample-from", type=Path, metavar="DIR", dest="insample_from",
+                   help="a download of the in-sample year by fetch_v2.py, read in place of the in-sample files "
+                        "(insample_v2, and doge_fwd's warm-up); a file whose bytes differ from the run's is "
+                        "checked by value, and the verdict is then INCOMPLETE at best")
     return p.parse_args(argv)
 
 
@@ -913,6 +1118,17 @@ def main(argv: Optional[Sequence[str]] = None, *, root: Path = REPO_ROOT) -> int
     else:
         print(f"--set must be one of {', '.join(known_sets())} or all", file=sys.stderr)
         return EXIT_USAGE
+    fresh: Optional[Path] = args.insample_from
+    readers = [n for n in names if reads_insample(n, root)] if fresh is not None else []
+    if fresh is not None:
+        if not fresh.is_dir():
+            print(f"--insample-from: {fresh} is not a directory", file=sys.stderr)
+            return EXIT_USAGE
+        if not readers:
+            print(f"--insample-from: --set {args.set_name} reads no in-sample file "
+                  f"(only {', '.join(n for n in known_sets() if reads_insample(n, root))} do)", file=sys.stderr)
+            return EXIT_USAGE
+        fresh = fresh.resolve()
 
     tag_commit, common = git_state(root)
     git_ok = tag_commit is not None
@@ -924,7 +1140,7 @@ def main(argv: Optional[Sequence[str]] = None, *, root: Path = REPO_ROOT) -> int
 
     reports = []
     for n in names:
-        r = verify_set(root, n, tag_commit, git_ok)
+        r = verify_set(root, n, tag_commit, git_ok, fresh=fresh if n in readers else None)
         print_report(r)
         reports.append(r)
 

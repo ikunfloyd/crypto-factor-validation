@@ -28,12 +28,22 @@ set is skipped without every file that set reads; in a clone none of whose
 remotes is the public repository (a fork's), it accepts INCOMPLETE for the
 push alone.
 
+A reader's own download of the in-sample year (--insample-from) is checked
+on small files in fetch_v2's layout: that it is read for the in-sample files
+and for nothing else, and left out, with the supplement's manifest, of the
+checks of a set's other files; that a file with the run's bytes passes and
+one with other bytes stands in by value, NOT CHECKED, so that the set is
+INCOMPLETE at best; that a missing file or a short year fails; and which
+command lines are refused. Recomputing the in-sample year and doge_fwd from
+a real download is skipped without data/history/insample_fresh.
+
 git runs with the user's global and system config disabled, and with a fixed
 identity in the environment, so nothing outside tmp_path is read or changed.
 """
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import shutil
 import subprocess
@@ -224,7 +234,7 @@ def stub_checks(monkeypatch, sets=None, common=PASS):
         monkeypatch.setattr(vr, "git_state", lambda root: (tag_commit, [vr.Check("git", common, "stub")]))
         monkeypatch.setattr(vr, "spec_check", lambda root, tag: vr.Check("constants", common, "stub"))
 
-    def verify_set(root, name, tag_commit, git_ok):
+    def verify_set(root, name, tag_commit, git_ok, fresh=None):
         seen.append(name)
         verdicts = (sets or {}).get(name, [PASS])
         return vr.SetReport(name, "stub", [vr.Check(f"check {i}", v, "stub") for i, v in enumerate(verdicts)])
@@ -1022,6 +1032,258 @@ class TestInputsLine:
                                 "file is read")
 
 
+# ---------------------------------------------------------------- a reader's download of the in-sample year
+
+IS_WINDOW = pipeline.window_of(vr.pipeline_set("insample_v2"))
+CANDLES = "data/history/DOGE-USDT-SWAP/candles_1m.parquet"            # Appendix A's
+SPOT = "data/history/is_supp/DOGE-USDT/candles_1m.parquet"            # the supplement's
+FUNDING = "data/history/is_supp/DOGE-USDT-SWAP/funding_rates.parquet"
+# Each in-sample file with its counterpart in a fetch_v2 download (<out-dir>/<instId>/<file>).
+COUNTERPARTS = [(CANDLES, "DOGE-USDT-SWAP/candles_1m.parquet"), (SPOT, "DOGE-USDT/candles_1m.parquet"),
+                (FUNDING, "DOGE-USDT-SWAP/funding_rates.parquet")]
+FWD_OWN = ["data/history/oos/doge_fwd/DOGE-USDT-SWAP/candles_1m.parquet",
+           "data/history/oos/doge_fwd/DOGE-USDT/candles_1m.parquet",
+           "data/history/oos/doge_fwd/DOGE-USDT-SWAP/funding_rates.parquet"]
+LAST_MINUTE = IS_WINDOW.end_ms - vr.MINUTE_MS
+HOURS_8 = 8 * 3_600_000
+
+
+def download(path, first=IS_WINDOW.warmup_start_ms, last=LAST_MINUTE, leave_out=()):
+    """
+    A reader's download of the in-sample year in fetch_v2's layout: two
+    candle files from minute ``first`` to minute ``last`` (by default the
+    year's warm-up start and its last minute) and a funding file of three
+    settlements over the same span, less the counterparts named in
+    ``leave_out``.
+    """
+    for _, rel in COUNTERPARTS:
+        if rel in leave_out:
+            continue
+        (path / rel).parent.mkdir(parents=True, exist_ok=True)
+        if rel.endswith("funding_rates.parquet"):
+            pl.DataFrame({"timestamp": [first, first + HOURS_8, last], "rate": [1e-4] * 3}).write_parquet(path / rel)
+        else:
+            pl.DataFrame({"timestamp": [first, last], "close": [1.0, 1.0]}).write_parquet(path / rel)
+    return path
+
+
+def supplement_manifest(root, fresh, same=(SPOT, FUNDING)):
+    """
+    results/manifest_is_supp.json under ``root``, recording for each
+    supplement file the rows and span of its counterpart in ``fresh``, and
+    that counterpart's SHA-256 for the files in ``same`` (another for the
+    rest).
+    """
+    series = []
+    for rel, twin in COUNTERPARTS[1:]:
+        ts = pl.read_parquet(fresh / twin)["timestamp"]
+        series.append({"path": rel, "sha256": sha256_file(fresh / twin) if rel in same else "0" * 64,
+                       "rows": ts.len(), "first_ts": int(ts.min()), "last_ts": int(ts.max())})
+    (root / IS_SUPP).parent.mkdir(parents=True, exist_ok=True)
+    (root / IS_SUPP).write_text(json.dumps({"series": series}), encoding="utf-8")
+    return root
+
+
+def by_value(fresh, same, other):
+    return (f"read from {fresh}. With the bytes the run read: {same}. With other bytes: {other}. Those stand in "
+            "by value: matching columns show that the committed results follow from this download through the "
+            "tag's code, not that the run read it")
+
+
+class TestInSampleDownload:
+    def test_it_is_read_for_the_in_sample_files_and_for_nothing_else(self, tmp_path):
+        fresh = download(tmp_path / "fresh")
+        root = supplement_manifest(tmp_path / "repo", fresh)
+        names = ("IS", "doge_fwd", "doge_2023", "doge_2024", "majors_2023")
+        before = {n: pipeline.input_files(n, root) for n in names}
+        with vr.fresh_insample(fresh, "read"):
+            during = {n: pipeline.input_files(n, root) for n in names}
+        assert {n: pipeline.input_files(n, root) for n in names} == before        # and put back afterwards
+        moved = {}
+        for n in names:
+            assert ([(f.kind, f.instrument, f.required) for f in during[n]]
+                    == [(f.kind, f.instrument, f.required) for f in before[n]])
+            moved[n] = [(b.path.relative_to(root).as_posix(), d.path.relative_to(fresh).as_posix())
+                        for b, d in zip(before[n], during[n]) if d.path != b.path]
+            # The other sets' files are read as before, over the same rows.
+            assert [(f.lo_ms, f.hi_ms) for f in during[n] if root in f.path.parents] == [
+                (f.lo_ms, f.hi_ms) for f in before[n] if not vr.is_insample_file(f, root)]
+        assert moved == {"IS": COUNTERPARTS, "doge_fwd": COUNTERPARTS, "doge_2023": [], "doge_2024": [],
+                         "majors_2023": []}
+        # A supplement file is read only over the span its manifest records; the candles over the rows the
+        # run read them for (doge_fwd: up to the in-sample year's end).
+        span = (IS_WINDOW.warmup_start_ms, LAST_MINUTE + 1)
+        assert {n: [(d.lo_ms, d.hi_ms) for d in during[n] if fresh in d.path.parents] for n in ("IS", "doge_fwd")} == {
+            "IS": [(None, None), span, span], "doge_fwd": [(None, IS_WINDOW.end_ms), span, span]}
+        assert [n for n in vr.known_sets() if vr.reads_insample(n, root)] == ["insample_v2", "doge_fwd"]
+
+    def test_the_checks_of_a_sets_other_files_leave_them_out_with_the_supplements_manifest(self, tmp_path):
+        root = tmp_path / "repo"
+        with vr.fresh_insample(tmp_path / "fresh", "check"):
+            files = {n: [f.path.relative_to(root).as_posix() for f in pipeline.input_files(n, root)]
+                     for n in ("IS", "doge_fwd")}
+            manifests = {n: [m.as_posix() for m in pipeline.manifests_required(n)] for n in ("IS", "doge_fwd")}
+        assert files == {"IS": [], "doge_fwd": FWD_OWN}
+        assert manifests == {"IS": [], "doge_fwd": ["results/oos/manifest_doge_fwd.json"]}
+        assert [m.as_posix() for m in pipeline.manifests_required("doge_fwd")] == [
+            IS_SUPP, "results/oos/manifest_doge_fwd.json"]
+
+    def test_without_a_download_the_pipeline_is_the_runs(self, tmp_path):
+        files, manifests = pipeline.input_files, pipeline.manifests_required
+        for mode in ("read", "check"):
+            with vr.fresh_insample(None, mode):
+                assert (pipeline.input_files, pipeline.manifests_required) == (files, manifests)
+
+    def test_files_with_the_runs_bytes_pass_and_the_others_stand_in_by_value(self, tmp_path):
+        fresh = download(tmp_path / "fresh")
+        check = vr.fresh_check(supplement_manifest(tmp_path / "repo", fresh), fresh)
+        supp = "(results/manifest_is_supp.json's SHA-256)"
+        assert check == vr.Check("in-sample files", NOT_CHECKED, by_value(
+            fresh, f"{SPOT} {supp}, {FUNDING} {supp}", f"{CANDLES} (Appendix A's SHA-256)"))
+
+    def test_a_supplement_file_with_other_bytes_stands_in_by_value_too(self, tmp_path):
+        fresh = download(tmp_path / "fresh")
+        check = vr.fresh_check(supplement_manifest(tmp_path / "repo", fresh, same=(SPOT,)), fresh)
+        supp = "(results/manifest_is_supp.json's SHA-256)"
+        assert check == vr.Check("in-sample files", NOT_CHECKED, by_value(
+            fresh, f"{SPOT} {supp}", f"{CANDLES} (Appendix A's SHA-256), {FUNDING} {supp}"))
+
+    def test_with_every_file_the_runs_bytes_it_passes(self, monkeypatch, tmp_path):
+        fresh = download(tmp_path / "fresh")
+        spec = dict(SPEC, insample_sha256={**SPEC["insample_sha256"],
+                                           "candles_1m.parquet": sha256_file(fresh / COUNTERPARTS[0][1])})
+        monkeypatch.setattr(vr, "get_spec", lambda: spec)
+        check = vr.fresh_check(supplement_manifest(tmp_path / "repo", fresh), fresh)
+        supp = "(results/manifest_is_supp.json's SHA-256)"
+        assert check == vr.Check("in-sample files", PASS, (
+            f"read from {fresh}, each with the bytes the run read: {CANDLES} (Appendix A's SHA-256), "
+            f"{SPOT} {supp}, {FUNDING} {supp}"))
+
+    @pytest.mark.parametrize("leave_out,first,last,needle", [
+        (("DOGE-USDT-SWAP/candles_1m.parquet",), IS_WINDOW.warmup_start_ms, LAST_MINUTE,
+         f"DOGE-USDT-SWAP/candles_1m.parquet does not exist; it would stand in for {CANDLES}"),
+        (("DOGE-USDT-SWAP/funding_rates.parquet",), IS_WINDOW.warmup_start_ms, LAST_MINUTE,
+         f"DOGE-USDT-SWAP/funding_rates.parquet does not exist; it would stand in for {FUNDING}"),
+        ((), IS_WINDOW.warmup_start_ms + vr.MINUTE_MS, LAST_MINUTE,
+         "covers 2025-09-24 00:01 to 2026-09-23 19:59, and the in-sample year needs 2025-09-24 00:00 to "
+         f"2026-09-23 19:59 UTC; it would stand in for {CANDLES}"),
+        ((), IS_WINDOW.warmup_start_ms, LAST_MINUTE - vr.MINUTE_MS,
+         "covers 2025-09-24 00:00 to 2026-09-23 19:58, and the in-sample year needs 2025-09-24 00:00 to "
+         f"2026-09-23 19:59 UTC; it would stand in for {SPOT}"),
+    ])
+    def test_a_missing_file_or_a_short_year_fails(self, tmp_path, leave_out, first, last, needle):
+        fresh = download(tmp_path / "fresh", first, last, leave_out)
+        check = vr.fresh_check(supplement_manifest(tmp_path / "repo", download(tmp_path / "twin")), fresh)
+        assert check.verdict == FAIL and needle in check.detail, check.detail
+
+    def test_a_file_that_is_not_candles_fails(self, tmp_path):
+        fresh = download(tmp_path / "fresh")
+        pl.DataFrame({"time": [1]}).write_parquet(fresh / "DOGE-USDT" / "candles_1m.parquet")
+        check = vr.fresh_check(supplement_manifest(tmp_path / "repo", download(tmp_path / "twin")), fresh)
+        assert check.verdict == FAIL
+        assert check.detail.startswith(f"{fresh / 'DOGE-USDT' / 'candles_1m.parquet'} cannot be read: ")
+        assert check.detail.endswith(f"; it would stand in for {SPOT}")
+
+    def test_a_funding_file_short_of_the_runs_settlements_fails(self, tmp_path):
+        fresh = download(tmp_path / "fresh")
+        twin = fresh / COUNTERPARTS[2][1]
+        root = supplement_manifest(tmp_path / "repo", fresh)
+        # A download made once OKX's REST endpoint no longer reaches the run's last settlement.
+        pl.DataFrame({"timestamp": [IS_WINDOW.warmup_start_ms, IS_WINDOW.warmup_start_ms + HOURS_8],
+                      "rate": [1e-4] * 2}).write_parquet(twin)
+        check = vr.fresh_check(root, fresh)
+        assert check == vr.Check("in-sample files", FAIL, (
+            f"{twin} holds 2 settlements from 2025-09-24 00:00 to 2026-09-23 19:59 UTC, where the run's file held 3 "
+            "(OKX's REST funding history reaches back about three months; fetch_v2.py --allow-test-data takes the "
+            f"months before that from OKX's archive); it would stand in for {FUNDING}"))
+
+    def test_funding_from_beyond_the_runs_span_is_no_obstacle(self, tmp_path):
+        # As in a download with --allow-test-data, whose archive months reach past the run's first settlement:
+        # the file then has other bytes, and only its settlements within the span are read (above).
+        fresh = download(tmp_path / "fresh")
+        twin = fresh / COUNTERPARTS[2][1]
+        root = supplement_manifest(tmp_path / "repo", fresh)
+        ts = pl.read_parquet(twin)["timestamp"].to_list()
+        pl.DataFrame({"timestamp": [ts[0] - HOURS_8] + ts, "rate": [1e-4] * 4}).write_parquet(twin)
+        check = vr.fresh_check(root, fresh)
+        assert check.verdict == NOT_CHECKED
+        assert f"With other bytes: {CANDLES} (Appendix A's SHA-256), {FUNDING} " in check.detail
+
+    def test_without_the_supplements_manifest_it_fails(self, tmp_path):
+        check = vr.fresh_check(tmp_path / "repo", download(tmp_path / "fresh"))
+        assert check.verdict == FAIL and check.detail.startswith(f"{IS_SUPP} cannot be read: ")
+
+    def test_the_in_sample_year_has_no_other_inputs_and_doge_fwds_own_come_first(self, monkeypatch, tmp_path):
+        fresh, asked = tmp_path / "fresh", []
+
+        def inputs_check(root, set_name, git_ok):
+            asked.append((set_name, git_ok, [f.path.relative_to(root).as_posix()
+                                             for f in pipeline.input_files(set_name, root)]))
+            return [vr.Check("inputs", PASS, "stub")]
+
+        monkeypatch.setattr(vr, "inputs_check", inputs_check)
+        monkeypatch.setattr(vr, "fresh_check", lambda root, f: vr.Check(vr.FRESH_CHECK, NOT_CHECKED, str(f)))
+        download_check = vr.Check("in-sample files", NOT_CHECKED, str(fresh))
+        assert vr.fresh_inputs_check(tmp_path, "insample_v2", True, fresh) == [download_check]
+        assert asked == []
+        assert vr.fresh_inputs_check(tmp_path, "doge_fwd", True, fresh) == [vr.Check("inputs", PASS, "stub"),
+                                                                            download_check]
+        assert asked == [("doge_fwd", True, FWD_OWN)]
+
+    def test_a_failure_of_doge_fwds_own_inputs_stops_before_the_download_is_read(self, monkeypatch, tmp_path):
+        monkeypatch.setattr(vr, "inputs_check", lambda root, set_name, git_ok: [vr.Check("inputs", FAIL, "stub")])
+        monkeypatch.setattr(vr, "fresh_check", lambda root, f: pytest.fail("the download was read"))
+        assert vr.fresh_inputs_check(tmp_path, "doge_fwd", True, tmp_path / "fresh") == [
+            vr.Check("inputs", FAIL, "stub")]
+
+    @pytest.mark.parametrize("name,computation", [("insample_v2", "run_insample"), ("doge_fwd", "run_oos_set")])
+    def test_a_set_computes_from_it_and_is_incomplete_at_best(self, monkeypatch, tmp_path, name, computation):
+        stub_steps(monkeypatch)
+        fresh, read = download(tmp_path / "fresh"), []
+        root = supplement_manifest(with_results(tmp_path / "repo", [name]), fresh)
+
+        def compute(*args, **kwargs):
+            read.append([f.path for f in pipeline.input_files(vr.pipeline_set(name), root)])
+            return recomputed() if name == "insample_v2" else (recomputed(), None)
+
+        monkeypatch.setattr(pipeline, computation, compute)
+        monkeypatch.setattr(vr, "fresh_inputs_check",
+                            lambda root, set_name, git_ok, f: [vr.Check(vr.FRESH_CHECK, NOT_CHECKED, "stub")])
+        r = vr.verify_set(root, name, "0" * 40, True, fresh=fresh)
+        assert [p for p in read[0] if root not in p.parents] == [fresh / rel for _, rel in COUNTERPARTS]
+        assert r.checks[0] == vr.Check("in-sample files", NOT_CHECKED, "stub")
+        assert r.verdict() == INCOMPLETE
+        assert r.notes == ["INCOMPLETE only because in-sample files stood in by value (see in-sample files)"]
+
+    @pytest.mark.parametrize("name", ["doge_2023", "doge_2024", "majors_2023"])
+    def test_a_set_that_reads_no_in_sample_file_is_a_usage_error(self, monkeypatch, capsys, tmp_path, name):
+        seen = stub_checks(monkeypatch)
+        assert vr.main(["--set", name, "--insample-from", str(tmp_path)]) == vr.EXIT_USAGE and seen == []
+        assert capsys.readouterr().err.strip() == (f"--insample-from: --set {name} reads no in-sample file "
+                                                   "(only insample_v2, doge_fwd do)")
+
+    def test_a_download_that_is_not_a_directory_is_a_usage_error(self, monkeypatch, capsys, tmp_path):
+        seen = stub_checks(monkeypatch)
+        assert vr.main(["--set", "insample_v2", "--insample-from", str(tmp_path / "nowhere")]) == vr.EXIT_USAGE
+        assert seen == []
+        assert capsys.readouterr().err.strip() == f"--insample-from: {tmp_path / 'nowhere'} is not a directory"
+
+    def test_all_hands_it_to_the_two_sets_that_read_in_sample_files(self, monkeypatch, capsys, tmp_path):
+        stub_checks(monkeypatch)
+        handed = {}
+
+        def verify_set(root, name, tag_commit, git_ok, fresh=None):
+            handed[name] = fresh
+            return vr.SetReport(name, "stub", [vr.Check("check", PASS, "stub")])
+
+        monkeypatch.setattr(vr, "verify_set", verify_set)
+        fresh = tmp_path / "fresh"
+        fresh.mkdir()
+        root = with_results(tmp_path / "repo", ALL)
+        assert vr.main(["--set", "all", "--insample-from", str(fresh)], root=root) == vr.EXIT_PASS
+        assert handed == {n: fresh.resolve() if n in ("insample_v2", "doge_fwd") else None for n in ALL}
+
+
 # ---------------------------------------------------------------- pushed
 
 class TestPushed:
@@ -1147,3 +1409,34 @@ class TestWithTheData:
         else:
             assert (proc.returncode, out[-1]) == (0, "overall: PASS (doge_fwd PASS)"), shown
         assert list(tmp_path.iterdir()) == []
+
+
+FRESH_DIR = REPO_ROOT / "data" / "history" / "insample_fresh"
+
+
+@pytest.mark.skipif(not all((FRESH_DIR / rel).exists() for _, rel in COUNTERPARTS),
+                    reason="needs a download of the in-sample year in data/history/insample_fresh (README, "
+                           "Reproduce)")
+class TestWithADownload:
+    def verify(self, tmp_path, name):
+        if vr.git_state(REPO_ROOT)[0] is None:
+            pytest.skip("needs the whole history and the prereg-freeze tag as well as the download")
+        env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+        proc = subprocess.run([sys.executable, str(SCRIPT), "--set", name, "--insample-from", str(FRESH_DIR)],
+                              cwd=tmp_path, env=env, capture_output=True, text=True, timeout=600)
+        out, shown = proc.stdout.splitlines(), proc.stdout + proc.stderr
+        assert [line for line in out if line.startswith("  [FAIL] ")] == [], shown
+        assert list(tmp_path.iterdir()) == []
+        return proc.returncode, out, shown
+
+    def test_the_in_sample_year_recomputes_from_it_byte_for_byte(self, tmp_path):
+        code, out, shown = self.verify(tmp_path, "insample_v2")
+        assert "  results/insample_v2.csv: 60 rows x 11 columns, byte-identical to the recomputation" in out, shown
+        assert "  note: INCOMPLETE only because in-sample files stood in by value (see in-sample files)" in out, shown
+        assert (code, out[-1]) == (3, "overall: INCOMPLETE (insample_v2 INCOMPLETE)"), shown
+
+    @pytest.mark.skipif(not all(p.exists() for p in FWD_INPUTS), reason="needs doge_fwd's own files too")
+    def test_doge_fwd_recomputes_from_it_byte_for_byte(self, tmp_path):
+        code, out, shown = self.verify(tmp_path, "doge_fwd")
+        assert "  results/oos/doge_fwd.csv: 60 rows x 38 columns, byte-identical to the recomputation" in out, shown
+        assert (code, out[-1]) == (3, "overall: INCOMPLETE (doge_fwd INCOMPLETE)"), shown

@@ -80,16 +80,16 @@ exchange and one fee schedule.
   differs from the set's committed manifest, or if the set's results exist or were ever committed.
   The guards catch accidents and make any deviation a deliberate act; they cannot stop an author
   who controls the machine. That each set ran once, with no reruns, rests on the public commit
-  record and on the results being reproducible from public data (Reproduce says how far).
+  record and on the results being reproducible from public data (Reproduce says how, and how far).
 - **Read against the plan.** The [comparison](docs/preregistration-results.md) checks each result
   against what the pre-registration said would be tested and how it would be read. Departures are
   dated in the pre-registration's deviations log (§12).
 
 **Reproduce**
 
-The primary set can be checked from OKX's public data, with no API key. Both scripts check the
-freeze through git, so they need a full clone of the public repository (not a fork, a shallow
-clone or a ZIP):
+Every results file and figure can be recomputed from OKX's public data, with no API key. The
+scripts check the freeze through git, so they need a full clone of the public repository (not a
+fork, a shallow clone or a ZIP). For the primary set:
 
 ```bash
 git clone https://github.com/ikunfloyd/crypto-factor-validation.git && cd crypto-factor-validation
@@ -110,13 +110,34 @@ python scripts/verify_results.py --set doge_2023
   column with `results/oos/doge_2023.csv` and its robustness file. It writes nothing. Without the
   git history and the `prereg-freeze` tag some checks cannot be made, and the verdict is
   INCOMPLETE.
-- **In-sample files.** `--set insample_v2` needs the in-sample files
-  (`data/history/DOGE-USDT-SWAP/` and the supplement in `data/history/is_supp/`), and so does
-  `--set doge_fwd`, whose warm-up is read from them. The main files came from an earlier
-  downloader and cannot be re-downloaded byte for byte; their hashes are in Appendix A of the
-  pre-registration. They are not in the repository. A download of the same year with
-  `fetch_v2.py` on 2026-11-24 matched them value for value: every one-minute candle the two share,
-  and every funding settlement.
+- **In-sample year.** `--set insample_v2`, `--set doge_fwd` (for its warm-up) and
+  `scripts/make_figures.py` read the in-sample year. Its candles came from an earlier downloader:
+  a new download matches them value for value but not byte for byte, and their SHA-256 is in
+  Appendix A of the pre-registration. They are not in the repository, because OKX's API Agreement
+  (§9.4) does not allow its market data to be redistributed. Download the year yourself and pass
+  it with `--insample-from` (`doge_fwd` also needs its own files, and the figures need `doge_2023`
+  and `doge_2024`):
+
+  ```bash
+  python scripts/fetch_v2.py --candles DOGE-USDT-SWAP DOGE-USDT --funding DOGE-USDT-SWAP \
+      --start '2025-09-24 00:00' --end '2026-09-23 20:00' --allow-test-data \
+      --out-dir data/history/insample_fresh --manifest /tmp/manifest_insample_fresh.json
+  python scripts/verify_results.py --set insample_v2 --insample-from data/history/insample_fresh
+  python scripts/verify_results.py --set doge_fwd --insample-from data/history/insample_fresh
+  python scripts/make_figures.py --out /tmp/figures --insample-from data/history/insample_fresh
+  for f in docs/figures/*.png; do cmp "$f" "/tmp/figures/${f##*/}"; done   # prints nothing if identical
+  ```
+
+  `--allow-test-data` lets the script read OKX's monthly funding archive for September 2025 and
+  September 2026, which overlap test sets; without it, September 2026 comes from OKX's REST
+  endpoint, which reaches back only about three months. The spot leg comes out with the bytes the
+  run read. The candles stand in by value, and so does the funding, which starts a few days
+  earlier than the run's file: it is read only over the span the supplement's manifest records.
+  The verdict is therefore INCOMPLETE, not PASS: every column matching shows that the committed
+  results follow from OKX's public data through the frozen code, though not that the run read
+  these bytes. A download on 2026-11-24 reproduced `results/insample_v2.csv` and
+  `results/oos/doge_fwd.csv` byte for byte this way, and drew the four figures byte for byte as
+  committed, with `environment.yml`'s matplotlib and Pillow.
 - **Maker probe.** `python scripts/fetch_maker_probe.py` fetches the probe's 56 archive files
   (5.2 GB) and checks each against its committed SHA-256; `python scripts/run_maker_probe.py
   --verify` then recomputes the probe and compares every output with the committed one, apart from
@@ -316,7 +337,8 @@ scripts/         demo.py, benchmark.py (engine); fetch_v2.py, run_insample_v2.py
                  fetch_maker_probe.py, run_maker_probe.py (maker probe);
                  verify_results.py, summarize_results.py, make_figures.py (for readers:
                  recompute the results, the comparison's numbers and the figures; the figures
-                 and the insample_v2 and doge_fwd results also need the in-sample files);
+                 and the insample_v2 and doge_fwd results also read the in-sample year, which
+                 a reader downloads);
                  fetch_history.py, factor_research.py (v1)
 tests/           pytest suites for the engine and for the study (see Tests)
 ```
