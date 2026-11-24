@@ -3,7 +3,8 @@
 This file is step 6 of the protocol in `docs/preregistration.md` (§10). It compares the out-of-sample
 results with what that document said would be tested and how the results would be read. It covers
 the three sets that decide or label cells: `doge_2023` (primary), `doge_2024` and `majors_2023`.
-`doge_fwd` is downloaded and run after 2026-11-23 20:00 UTC, and gets its own section then.
+`doge_fwd`, which decides nothing, was downloaded and run on 2026-11-24 and has its own section,
+and so does the maker probe of §11, run the same day.
 
 **Terms.**
 - **Cell.** A cell is one factor × bar (15m or 1H) × horizon h (1, 5 or 15 bars).
@@ -26,7 +27,15 @@ the three sets that decide or label cells: `doge_2023` (primary), `doge_2024` an
   - `results/oos/robustness_doge_2023.csv`
   - `results/oos/doge_2024.csv`
   - `results/oos/majors_2023.csv`
-  - and, for in-sample values, `results/insample_v2.csv`.
+  - and, for in-sample values, `results/insample_v2.csv`;
+  - that section's last paragraph also quotes `results/oos/doge_fwd.csv`.
+- The `doge_fwd` section's numbers come from `results/oos/doge_fwd.csv` and its manifest, compared
+  with `doge_2023.csv` and `doge_2024.csv`; its window and warm-up from Appendix A, its record from
+  git, and the earlier contact from §3.
+- The maker probe's numbers come from `results/maker_probe/` and, for the candidate days,
+  `results/manifest_maker_probe.json`; its record from git.
+- A range of values is given to the precision of the values it spans, each end rounded to the
+  nearest: "2.9–4.0" spans 2.935 to 3.980.
 - The Record comes from git, the GitHub Release and Software Heritage.
 - The Data section counts the downloaded series under `data/history/`. These are not committed;
   their SHA-256 hashes are in the manifests (`results/oos/manifest_*.json`).
@@ -57,7 +66,7 @@ Each set was downloaded, its manifest committed and pushed, and then run once, i
   The departure is logged in §12.
 - **Why the primary set ran last.** `doge_2023`'s `replicated` and `consistent_on_majors` labels
   are read from the two secondary results. Before reading them, its run recomputed both from their
-  committed inputs and checked that the committed files matched (to 10⁻⁹). That check wrote no file
+  committed inputs and checked that the committed files matched (to 10⁻⁹). That check kept no file
   and is not a rerun in the sense of §10 step 6.
 - **Code.** Every run used the code of `prereg-freeze`. Each results file's `code_commit` is the
   checkout's HEAD when that set ran, which is the set's manifest commit above, not `4a4e4b0`.
@@ -228,11 +237,12 @@ All rows are on `doge_2023`.
   - R5 has no standard error. With 55-bar runs, the year holds only 54 runs at 1H.
 - **R6, cost sensitivity.**
   - No cell reaches t ≥ 3.144 at any cost, gross included.
-  - Gross (c = 0), 39 cells are positive and the largest t is 2.68.
+  - Gross (c = 0), 39 cells are positive and t runs from −2.49 to +2.68: in either direction, no
+    cell's |t| exceeds 2.68.
   - At c = 4 bp (maker on both sides at §11's fees, which §11 calls unverified), 10 cells are
     positive and the largest t is 2.29.
   - That row assumes every entry and exit rests passively and fills at the bar's close, with no
-    missed fills and no adverse selection. The §11 probe, which measures both, has not yet run.
+    missed fills and no adverse selection. The §11 probe, which measures both, is reported below.
 - **R8, funding included.**
   - R8 is positive for 2 cells: 1H, h = 5 `rolling_vol_ratio` (+22.4, t 1.72) and 1H, h = 15
     `hurst_regime` (+24.0, t 0.98).
@@ -303,8 +313,48 @@ the smallest of any cell (R1). None of what follows is a test.
 - **Caveat.** §7 calls the Hansen–Hodrick test liberal for persistent signals in trending periods.
   At a mean run of 55 bars, this is the most persistent signal in the study (RL).
 
-`doge_fwd` will report this cell's μ̂ and 95% interval along with every other cell's, and decides
-nothing (§7).
+`doge_fwd` reports this cell's μ̂ and 95% interval along with every other cell's, and decides
+nothing (§7): +5.9 bp, from −13.6 to +25.3 (next section).
+
+## `doge_fwd`, descriptively (§4.1, §7)
+
+`doge_fwd` is DOGE from 2026-09-23 20:00 to 2026-11-23 20:00 UTC, the two months after the in-sample
+year. §7 makes it descriptive: each cell reports μ̂ and a two-sided 95% interval, μ̂ ± 1.960·SE, and
+nothing is decided.
+
+| Step | Commit | Time (UTC, 2026-11-24) |
+|---|---|---|
+| `doge_fwd`: manifest, then results | `7a8e5c6`, `70c2596` | 08:53, 08:54 |
+
+- **Window.** `scripts/fetch_v2.py` refuses to download a protected window that has not closed by
+  OKX's clock, and `scripts/run_oos.py` checks again that it has (guard 6).
+- **Code.** The run used the code of `prereg-freeze`. At its HEAD, `git diff --name-only
+  prereg-freeze HEAD` listed `docs/preregistration.md` (a §12 row), `docs/preregistration-freeze.md`,
+  this file, and files under `results/`.
+- **Warm-up.** The warm-up, from 2026-06-25 20:00, is read from the in-sample files. The run
+  matched their hashes against Appendix A and the in-sample supplement's manifest.
+- **Data.** Both candle series, the perpetual and its spot leg, have 87,840 rows, one per minute of
+  the window, with no gaps. Funding has 183 settlements, one in each 8-hour slot, all stamped on
+  the grid.
+- **Earlier contact.** §3 lists two looks inside this window during planning: a three-minute poll
+  of open interest, and the maker-fill sketch, whose archive files cover 2026-10-03 16:00 →
+  2026-10-05 00:00 UTC. No factor was computed on either. That stretch is flagged here, as §3
+  says; the cells include it unchanged.
+
+**Results.**
+- No cell's interval lies above zero, and 35 of the 60 lie entirely below it.
+- Six cells have μ̂ > 0, all on 1H bars at h = 5 or 15. Each interval is at least 36 bp wide. The
+  largest μ̂ is +17.1 (1H, h = 15, `basis_z_score`), from −20.3 to +54.4.
+- The ten 15m, h = 1 cells again lose about the cost. Their gross means lie between −1.7 and
+  +0.4 bp and their net means between −11.7 and −9.6, and every interval ends below −8.0.
+- The largest primary cell, 1H, h = 5, `rolling_vol_ratio`, has μ̂ = +5.9, against +17.6 on
+  `doge_2023` and +14.3 on `doge_2024`.
+- In 55 of the 60 cells, μ̂ has the same sign as on `doge_2023`, mostly because both are negative.
+  The rank correlation of the two sets' μ̂ across cells is 0.21.
+
+**Reading.** Two months give wide intervals at the longer horizons, so `doge_fwd` can neither
+confirm nor rule out the edges the primary year left open there. Where the data are dense, at
+short horizons, it agrees with the primary result: the cells lose the cost.
 
 ## Data
 
@@ -355,8 +405,97 @@ other than `prereg-freeze`'s, so it would be a deviation logged in §12. It woul
 `results/oos/rerun-N/` and reported alongside the committed runs, which stay primary (§10 steps
 5–6). None has been made.
 
-## Still to come
+## Maker probe (§11, exploratory)
 
-- **`doge_fwd`:** downloaded and run after 2026-11-23 20:00 UTC, with its comparison added here.
-- **Maker probe (§11):** its archive files are downloaded only after `doge_fwd` has run (§12,
-  2026-10-12). The 14 days are fixed in the freeze amendment.
+§11 asks whether resting at the touch beats crossing the spread once adverse selection is counted.
+Its output informs the discussion of cost only; it never replaces c = 10 bp. The numbers below are
+from `results/maker_probe/summary.csv`, `daily.csv` and `checks.csv`, and the archive files are
+listed with their SHA-256 in `results/maker_probe/manifest_archives.json`.
+
+| Step | Commit | Time (UTC, 2026-11-24) |
+|---|---|---|
+| Engine, tests and download script; archive parsers left as stubs | `461ae82` | 09:02 |
+| Archive files downloaded (56 files, 5.2 GB), then recorded | `aee7856` | 09:03–09:16, 09:22 |
+| Parsers and run script, with three §12 rows on the files' format | `8f5ad83` | 09:22 |
+| Trades marked `source` 1 left out, with a §12 row | `b526d26` | 09:26 |
+| Results, both runs | `99e20f0` | 09:35 |
+| Snapshot cadence corrected in §12 and in the parser's notes | `34be6d4` | 09:37 |
+| Readers' modes: `fetch_maker_probe.py` checks the listed files, `run_maker_probe.py --verify` | `14b245d` | 09:43 |
+
+- **Order.** The engine's rules (fill models, timing, skips, the snapshot check) were committed and
+  pushed before any archive file was downloaded, and the download began only after `doge_fwd` had
+  run, as §12 (2026-10-12) requires. The parsers depend on the files' format, so they came after
+  the download. Every §12 row on the format was committed before the run. After it, `34be6d4`
+  corrected what one row said about the snapshot cadence (every minute on five of the 14 days, not
+  on all), which the run had checked either way, and changed no result; `14b245d` added the
+  readers' modes, which compute nothing new.
+- **One execution.** A first attempt (§12's "first run") stopped on its second day, at the first
+  trade file with a `source` column, and wrote nothing. The execution recorded above is the only
+  one that produced output, and it computed both runs together: `parser_gaps` treats only missing data as gaps, and
+  `touch_gaps` also drops the interval since a side's previous snapshot wherever that snapshot's
+  best level differs from the rebuilt book (§12, 2026-11-24).
+- **As planned.** The 14 days are the freeze amendment's, drawn from 364 candidates. On each day,
+  288 decisions 5 minutes apart post one contract at the best bid and, separately, at the best
+  ask, each for 60 seconds. M1, the lower bound, fills only on a trade strictly through the order's
+  price or an opposite best that reaches it. M2, the upper bound, also fills when a trade at the
+  price reaches the order after the queue ahead, starting at the displayed size, has been used up
+  by trades at the price and by size decreases at the level. Fees are maker 2 bp and taker 5 bp,
+  unverified.
+
+**Data.** Each day was checked before it was simulated (`checks.csv`).
+- **Complete.** No book paused for 5 s or more (the longest pause was 1.6 s), no trade id jumped,
+  and no timestamp ran backwards, so neither run has a gap from missing data. Each day's 00:00
+  decision comes before the day's first snapshot, stamped a few ms later, and is skipped: 14 of
+  the 4,032 decisions per side.
+- **Depth.** The rebuilt book never holds more than 400 levels a side, so the files delete levels
+  that leave the top 400.
+- **Clocks and units.** On every day, 98–99% of trades are followed within 100 ms by a decrease of
+  the level they hit. The median lag is 5–6 ms and 95–98% come within 10 ms, which fits book
+  updates batched every 10 ms. For trades alone at their price in their millisecond, the median
+  ratio of the decrease to the trade's size is 1.0 on every day: both files count 0.01 contract
+  as one unit.
+- **Snapshots.** 2,531 of the 16,210 snapshot sides (15.6%) differ from the rebuilt book at the
+  touch, 145 of them in price and the rest in size only. `touch_gaps` therefore drops 62 of the
+  336 hours, and 1,065 of the 4,018 decisions per side.
+- **Trades left out.** 1,790 trades marked `source` 1, all in the input of the day 2026-09-11.
+
+**Results.** Means over the 14 days, each day weighted equally, with the standard error across days
+in brackets. Markouts are gross, from the fill price to the mid k minutes later, positive when the
+mid moved in the order's favour. Shortfalls are measured from the decision-time mid, fees
+included. Crossing at once costs 5.48 bp (SE 0.04) on either side in both runs: the 5 bp taker fee
+plus half the spread. "Difference" is posting, then crossing after 60 s if unfilled, minus crossing
+at once; negative means resting was cheaper.
+
+| Run | Side | Model | Fill rate | Markout 1 min | 5 min | 15 min | Post, then cross | Difference |
+|---|---|---|---|---|---|---|---|---|
+| `parser_gaps` | buy | M1 | 0.78 (0.02) | −1.69 (0.21) | −1.06 (0.45) | −0.71 (1.12) | 3.72 (0.10) | −1.75 (0.08) |
+| `parser_gaps` | buy | M2 | 0.87 (0.01) | −1.03 (0.21) | −0.17 (0.37) | +0.16 (1.05) | 2.94 (0.07) | −2.54 (0.07) |
+| `parser_gaps` | sell | M1 | 0.76 (0.03) | −1.01 (0.21) | −1.62 (0.38) | −2.26 (1.06) | 3.98 (0.14) | −1.50 (0.13) |
+| `parser_gaps` | sell | M2 | 0.86 (0.01) | −0.21 (0.19) | −0.98 (0.34) | −1.65 (1.05) | 3.11 (0.12) | −2.37 (0.12) |
+| `touch_gaps` | buy | M1 | 0.77 (0.02) | −1.47 (0.24) | −0.74 (0.41) | +0.20 (0.81) | 3.74 (0.14) | −1.74 (0.13) |
+| `touch_gaps` | buy | M2 | 0.87 (0.01) | −0.85 (0.21) | −0.09 (0.34) | +0.74 (0.76) | 2.94 (0.10) | −2.54 (0.10) |
+| `touch_gaps` | sell | M1 | 0.75 (0.03) | −1.20 (0.24) | −1.53 (0.40) | −2.56 (0.68) | 3.97 (0.15) | −1.51 (0.14) |
+| `touch_gaps` | sell | M2 | 0.86 (0.01) | −0.42 (0.24) | −0.84 (0.32) | −1.80 (0.64) | 3.12 (0.13) | −2.35 (0.13) |
+
+**Reading.**
+- **Resting fills.** Within a minute, 75–78% of orders fill under M1 and 86–87% under M2.
+- **Fills are adversely selected.** A minute after a fill, the mid is on average 0.2–1.7 bp on the
+  wrong side of the fill price. At 15 minutes, with standard errors of 0.6–1.1 bp, the buy side
+  cannot be told from zero, while the sell side stays 1.7–2.6 bp against the order.
+- **Resting is still cheaper.** Posting first and crossing after 60 s if unfilled cost 2.9–4.0 bp
+  per side, against 5.48 bp for crossing at once: 1.5–2.5 bp less, with standard errors of
+  0.07–0.14 bp. The two runs agree on the difference to within 0.02 bp.
+- **What it means for cost.** Per round trip, posting first comes to about 6.0 (M2) to 7.7 (M1) bp
+  from the mid, against 11.0 bp for two crossings. The study's c = 10 bp counts fees only, so the
+  two are not like for like, and §11 rules out putting one in place of the other.
+- **What it means for the result.** R6 above shows that no cell reaches its threshold at any cost,
+  gross included. Cheaper execution cannot change the primary result.
+- **Limits.** Fourteen days; one contract, which takes no queue position from anyone; fees not
+  verified; the true fill lies between M1 and M2. The decisions are unconditional, every 5 minutes,
+  while a factor trades when its signal fires, and signals may meet more or less adverse selection
+  than an average minute. The 10 ms batching of the book hides what happens inside a batch.
+
+## Not done
+
+Nothing else is planned under the pre-registration. Any further analysis would be a deviation:
+logged in §12, run apart from the committed results and reported beside them.
