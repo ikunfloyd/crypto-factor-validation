@@ -1,0 +1,1317 @@
+{
+  "manifest_version": 1,
+  "tool": "scripts/fetch_maker_probe.py",
+  "section": "\u00a711",
+  "inst_id": "DOGE-USDT-SWAP",
+  "days": [
+    "2025-10-19",
+    "2025-11-02",
+    "2025-11-07",
+    "2025-11-12",
+    "2025-12-07",
+    "2025-12-18",
+    "2026-01-24",
+    "2026-02-12",
+    "2026-06-11",
+    "2026-06-25",
+    "2026-07-27",
+    "2026-08-04",
+    "2026-09-02",
+    "2026-09-11"
+  ],
+  "doge_fwd_results_commit": "70c25968ca79e5d6c9aa4c2495f4902a98bdffb1",
+  "candidates_file": "results/manifest_maker_probe.json",
+  "candidates_commit": "d7b9b8dadf5e4ab1504208e84fd6645107b1d9eb",
+  "archive_dir": "data/history/maker_probe",
+  "created_utc": "2026-11-24T09:16:15Z",
+  "files": [
+    {
+      "kind": "orderbook",
+      "file_date": "2025-10-19",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-10-19.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20251019/DOGE-USDT-SWAP-L2orderbook-400lv-2025-10-19.tar.gz",
+      "covers_utc": [
+        1760832000000,
+        1760918400000
+      ],
+      "last_modified": "Wed, 22 Oct 2025 06:58:58 GMT",
+      "etag": "\"9A9934F1740DD7BFE18E5F0B2EA9C316\"",
+      "content_length": "250535796",
+      "downloaded_utc": "2026-11-24T09:03:03Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-10-19.data",
+          "bytes": 1630620751
+        }
+      ],
+      "bytes": 250535796,
+      "sha256": "53fa5911e6610a4c2e2df787eb91f61949d53bbb5053373cdcec7a7fac78fd58"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2025-10-20",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-10-20.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20251020/DOGE-USDT-SWAP-L2orderbook-400lv-2025-10-20.tar.gz",
+      "covers_utc": [
+        1760918400000,
+        1761004800000
+      ],
+      "last_modified": "Thu, 23 Oct 2025 07:55:34 GMT",
+      "etag": "\"CCB60CBB577139AC6088A9CDF7781E8E\"",
+      "content_length": "284661050",
+      "downloaded_utc": "2026-11-24T09:03:58Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-10-20.data",
+          "bytes": 1811509404
+        }
+      ],
+      "bytes": 284661050,
+      "sha256": "b0ea8b7a0b6a45835631d4668accc3bc9ea694d451a49400cf3842913fe7d75a"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2025-10-19",
+      "filename": "DOGE-USDT-SWAP-trades-2025-10-19.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20251019/DOGE-USDT-SWAP-trades-2025-10-19.zip?v=1000",
+      "covers_utc": [
+        1760803200000,
+        1760889600000
+      ],
+      "last_modified": "Sun, 19 Oct 2025 20:27:08 GMT",
+      "etag": "\"8BCB4F7246F2636B1B3381344E293397\"",
+      "content_length": "8409625",
+      "downloaded_utc": "2026-11-24T09:04:01Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2025-10-19.csv",
+          "bytes": 81852434
+        }
+      ],
+      "bytes": 8409625,
+      "sha256": "be2e2b5a84ed5bbdbcb6b6afa49d20ff0fd6cc7ea9176035df81e1250d2887f7"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2025-10-20",
+      "filename": "DOGE-USDT-SWAP-trades-2025-10-20.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20251020/DOGE-USDT-SWAP-trades-2025-10-20.zip?v=1000",
+      "covers_utc": [
+        1760889600000,
+        1760976000000
+      ],
+      "last_modified": "Mon, 20 Oct 2025 20:33:19 GMT",
+      "etag": "\"3D1557AC2B21FB3526FD58CC3879423E\"",
+      "content_length": "8489735",
+      "downloaded_utc": "2026-11-24T09:04:04Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2025-10-20.csv",
+          "bytes": 82124321
+        }
+      ],
+      "bytes": 8489735,
+      "sha256": "8719e4069b592951ef1a30b7b04f1d730a6ca439f50f31d39d7e3fb3d12bcf01"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2025-11-02",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-02.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20251102/DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-02.tar.gz",
+      "covers_utc": [
+        1762041600000,
+        1762128000000
+      ],
+      "last_modified": "Wed, 05 Nov 2025 06:41:16 GMT",
+      "etag": "\"7C89175D4377F2BD2A698C0945E27166\"",
+      "content_length": "162750303",
+      "downloaded_utc": "2026-11-24T09:04:36Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-02.data",
+          "bytes": 1169359815
+        }
+      ],
+      "bytes": 162750303,
+      "sha256": "9470a5e2a8720e356eac105bbf8fbbb20c70a35df351f33e4d74e8e8454fde6a"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2025-11-03",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-03.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20251103/DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-03.tar.gz",
+      "covers_utc": [
+        1762128000000,
+        1762214400000
+      ],
+      "last_modified": "Thu, 06 Nov 2025 09:43:07 GMT",
+      "etag": "\"537192720E23388651A6CA1677CDDC39\"",
+      "content_length": "344217462",
+      "downloaded_utc": "2026-11-24T09:05:33Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-03.data",
+          "bytes": 2091557873
+        }
+      ],
+      "bytes": 344217462,
+      "sha256": "99b6acb5d457a468c72b9417a728f3646535cfbed0f1b2ddc78e76c1c5a480fd"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2025-11-02",
+      "filename": "DOGE-USDT-SWAP-trades-2025-11-02.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20251102/DOGE-USDT-SWAP-trades-2025-11-02.zip?v=1000",
+      "covers_utc": [
+        1762012800000,
+        1762099200000
+      ],
+      "last_modified": "Fri, 25 Sep 2026 03:44:27 GMT",
+      "etag": "\"7D54471FED766FF0B1F88D4EC9B046F5\"",
+      "content_length": "3869893",
+      "downloaded_utc": "2026-11-24T09:05:35Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2025-11-02.csv",
+          "bytes": 37250604
+        }
+      ],
+      "bytes": 3869893,
+      "sha256": "833a0c8528323468edd30da551d729e7cc455880b7c9b9bdc587bc62e193f20f"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2025-11-03",
+      "filename": "DOGE-USDT-SWAP-trades-2025-11-03.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20251103/DOGE-USDT-SWAP-trades-2025-11-03.zip?v=1000",
+      "covers_utc": [
+        1762099200000,
+        1762185600000
+      ],
+      "last_modified": "Fri, 25 Sep 2026 04:35:31 GMT",
+      "etag": "\"1521D13B84292D4B33B58FD523256973\"",
+      "content_length": "11631480",
+      "downloaded_utc": "2026-11-24T09:05:39Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2025-11-03.csv",
+          "bytes": 116814792
+        }
+      ],
+      "bytes": 11631480,
+      "sha256": "7e59610745278f209c97bc51ddb14649689eb7edb7dc9c411136d7f6bd5b1453"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2025-11-07",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-07.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20251107/DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-07.tar.gz",
+      "covers_utc": [
+        1762473600000,
+        1762560000000
+      ],
+      "last_modified": "Mon, 10 Nov 2025 09:43:20 GMT",
+      "etag": "\"E2120133611EE79A602BB6489A29190B\"",
+      "content_length": "356080614",
+      "downloaded_utc": "2026-11-24T09:06:42Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-07.data",
+          "bytes": 2150078473
+        }
+      ],
+      "bytes": 356080614,
+      "sha256": "2420cfc3482a1464367862cb6a6ff8fb0711c4b760fa846eef44d359be10236d"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2025-11-08",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-08.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20251108/DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-08.tar.gz",
+      "covers_utc": [
+        1762560000000,
+        1762646400000
+      ],
+      "last_modified": "Wed, 28 Oct 2026 03:56:06 GMT",
+      "etag": "\"8705151C8ECD04B1EB678C981CE5E467\"",
+      "content_length": "270483288",
+      "downloaded_utc": "2026-11-24T09:07:28Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-08.data",
+          "bytes": 1703532825
+        }
+      ],
+      "bytes": 270483288,
+      "sha256": "3d91076815388d710e9c19500234cf0e3001220bc6783d9aebc8e9136e121c1d"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2025-11-07",
+      "filename": "DOGE-USDT-SWAP-trades-2025-11-07.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20251107/DOGE-USDT-SWAP-trades-2025-11-07.zip?v=1000",
+      "covers_utc": [
+        1762444800000,
+        1762531200000
+      ],
+      "last_modified": "Fri, 25 Sep 2026 08:29:26 GMT",
+      "etag": "\"13F50FCA7546B3A1910D804035C4BDC1\"",
+      "content_length": "10033921",
+      "downloaded_utc": "2026-11-24T09:07:30Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2025-11-07.csv",
+          "bytes": 102103722
+        }
+      ],
+      "bytes": 10033921,
+      "sha256": "eb1defb9eb92fd8fd303689c8a8db24eaa88c890f3687a52009fcc6babd26f64"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2025-11-08",
+      "filename": "DOGE-USDT-SWAP-trades-2025-11-08.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20251108/DOGE-USDT-SWAP-trades-2025-11-08.zip?v=1000",
+      "covers_utc": [
+        1762531200000,
+        1762617600000
+      ],
+      "last_modified": "Fri, 25 Sep 2026 09:19:03 GMT",
+      "etag": "\"EE2B222DDB417F9A526CE48ACE226E6B\"",
+      "content_length": "11970073",
+      "downloaded_utc": "2026-11-24T09:07:34Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2025-11-08.csv",
+          "bytes": 122847687
+        }
+      ],
+      "bytes": 11970073,
+      "sha256": "3bf63ea0c8ec8eca5fe612d4762b38bcdd936a37ac5584505c4715ead0b4d6d3"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2025-11-12",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-12.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20251112/DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-12.tar.gz",
+      "covers_utc": [
+        1762905600000,
+        1762992000000
+      ],
+      "last_modified": "Sat, 15 Nov 2025 08:37:25 GMT",
+      "etag": "\"EF5FFA92EC98FBE0657EAEE024F7D6E8\"",
+      "content_length": "255726681",
+      "downloaded_utc": "2026-11-24T09:08:18Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-12.data",
+          "bytes": 1652964658
+        }
+      ],
+      "bytes": 255726681,
+      "sha256": "6bf4a6d1090a6c33ccfef8c33ea5184fe1052bcc5b6b57b4800e30c2d55dbe0d"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2025-11-13",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-13.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20251113/DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-13.tar.gz",
+      "covers_utc": [
+        1762992000000,
+        1763078400000
+      ],
+      "last_modified": "Sun, 16 Nov 2025 09:20:30 GMT",
+      "etag": "\"C42F00D13F6288101F2C8EF826DD990F\"",
+      "content_length": "312373756",
+      "downloaded_utc": "2026-11-24T09:09:13Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-11-13.data",
+          "bytes": 1928137111
+        }
+      ],
+      "bytes": 312373756,
+      "sha256": "cf171618828f3f2aa83c6e796f03a721ed201c8491ffcde3738efafa60a50047"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2025-11-12",
+      "filename": "DOGE-USDT-SWAP-trades-2025-11-12.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20251112/DOGE-USDT-SWAP-trades-2025-11-12.zip?v=1000",
+      "covers_utc": [
+        1762876800000,
+        1762963200000
+      ],
+      "last_modified": "Fri, 25 Sep 2026 12:14:31 GMT",
+      "etag": "\"81623F4555DC9E2D760CFECC1CE0D7EA\"",
+      "content_length": "7829309",
+      "downloaded_utc": "2026-11-24T09:09:17Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2025-11-12.csv",
+          "bytes": 79286952
+        }
+      ],
+      "bytes": 7829309,
+      "sha256": "6c482cadf2e1053f3a40ef656df72a3ffb970835156358055836a69c44906c37"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2025-11-13",
+      "filename": "DOGE-USDT-SWAP-trades-2025-11-13.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20251113/DOGE-USDT-SWAP-trades-2025-11-13.zip?v=1000",
+      "covers_utc": [
+        1762963200000,
+        1763049600000
+      ],
+      "last_modified": "Fri, 25 Sep 2026 13:04:37 GMT",
+      "etag": "\"8028AA875CD51150E8C8F7A07C61016F\"",
+      "content_length": "9677987",
+      "downloaded_utc": "2026-11-24T09:09:20Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2025-11-13.csv",
+          "bytes": 98599520
+        }
+      ],
+      "bytes": 9677987,
+      "sha256": "20aa9e6559b41186c1a6c7b3750f8e9b78afbf2389c9a3b3697654d7d51b2ba4"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2025-12-07",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-12-07.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20251207/DOGE-USDT-SWAP-L2orderbook-400lv-2025-12-07.tar.gz",
+      "covers_utc": [
+        1765065600000,
+        1765152000000
+      ],
+      "last_modified": "Wed, 10 Dec 2025 06:14:39 GMT",
+      "etag": "\"C2FDE674A584475432AD77D8F9E26B5B\"",
+      "content_length": "173396259",
+      "downloaded_utc": "2026-11-24T09:09:50Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-12-07.data",
+          "bytes": 1250438052
+        }
+      ],
+      "bytes": 173396259,
+      "sha256": "7ebe810fddbea4460c8e88548300e7166b864e035c54b93b3da983b0a402fb70"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2025-12-08",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-12-08.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20251208/DOGE-USDT-SWAP-L2orderbook-400lv-2025-12-08.tar.gz",
+      "covers_utc": [
+        1765152000000,
+        1765238400000
+      ],
+      "last_modified": "Tue, 09 Dec 2025 00:05:48 GMT",
+      "etag": "\"574B531003037AAE2A55F93FD67B9FF3\"",
+      "content_length": "213104189",
+      "downloaded_utc": "2026-11-24T09:10:28Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-12-08.data",
+          "bytes": 1406366845
+        }
+      ],
+      "bytes": 213104189,
+      "sha256": "df736ec3101a9bbb067228ffa4000fbffa3fc640df97fd27366623de03cca756"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2025-12-07",
+      "filename": "DOGE-USDT-SWAP-trades-2025-12-07.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20251207/DOGE-USDT-SWAP-trades-2025-12-07.zip?v=1000",
+      "covers_utc": [
+        1765036800000,
+        1765123200000
+      ],
+      "last_modified": "Wed, 23 Sep 2026 06:52:01 GMT",
+      "etag": "\"0377C72D3EE9E2505D4D140E3D47B8C5\"",
+      "content_length": "3881975",
+      "downloaded_utc": "2026-11-24T09:10:31Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2025-12-07.csv",
+          "bytes": 37138041
+        }
+      ],
+      "bytes": 3881975,
+      "sha256": "38d5edd0668b54e425074b805f093cab4c86a3992c6450f9881ba02d461bee6c"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2025-12-08",
+      "filename": "DOGE-USDT-SWAP-trades-2025-12-08.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20251208/DOGE-USDT-SWAP-trades-2025-12-08.zip?v=1000",
+      "covers_utc": [
+        1765123200000,
+        1765209600000
+      ],
+      "last_modified": "Wed, 23 Sep 2026 07:24:12 GMT",
+      "etag": "\"82FEC2D519F32D0737EC0B022F66D90F\"",
+      "content_length": "6859208",
+      "downloaded_utc": "2026-11-24T09:10:34Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2025-12-08.csv",
+          "bytes": 68390210
+        }
+      ],
+      "bytes": 6859208,
+      "sha256": "46a9cc09b416d77eff0fd8816b69129b92797ee9f5973d1cd875581ecbc51fb7"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2025-12-18",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-12-18.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20251218/DOGE-USDT-SWAP-L2orderbook-400lv-2025-12-18.tar.gz",
+      "covers_utc": [
+        1766016000000,
+        1766102400000
+      ],
+      "last_modified": "Fri, 19 Dec 2025 00:06:16 GMT",
+      "etag": "\"51347A568CAFC3101DC2C2A0D199594B\"",
+      "content_length": "243742344",
+      "downloaded_utc": "2026-11-24T09:11:14Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-12-18.data",
+          "bytes": 1539263766
+        }
+      ],
+      "bytes": 243742344,
+      "sha256": "a478089ce601c6d067f900f5a4937b9719f46030a9b0d7c881892b4a26261c6a"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2025-12-19",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-12-19.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20251219/DOGE-USDT-SWAP-L2orderbook-400lv-2025-12-19.tar.gz",
+      "covers_utc": [
+        1766102400000,
+        1766188800000
+      ],
+      "last_modified": "Sat, 20 Dec 2025 00:05:36 GMT",
+      "etag": "\"6E9C98739214C1545FCC9C2281F9332E\"",
+      "content_length": "222948276",
+      "downloaded_utc": "2026-11-24T09:11:57Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2025-12-19.data",
+          "bytes": 1443578853
+        }
+      ],
+      "bytes": 222948276,
+      "sha256": "6d864bd2f383eadc689c487050d3edf75d7654ac5898286fc31e7a9c8ff1a563"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2025-12-18",
+      "filename": "DOGE-USDT-SWAP-trades-2025-12-18.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20251218/DOGE-USDT-SWAP-trades-2025-12-18.zip?v=1000",
+      "covers_utc": [
+        1765987200000,
+        1766073600000
+      ],
+      "last_modified": "Wed, 23 Sep 2026 13:03:10 GMT",
+      "etag": "\"B5639B223BB95E18D308414D8D5AE8BF\"",
+      "content_length": "8830623",
+      "downloaded_utc": "2026-11-24T09:12:01Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2025-12-18.csv",
+          "bytes": 87287764
+        }
+      ],
+      "bytes": 8830623,
+      "sha256": "bdca2f33f131504abbf93ab12b9dbc7a3c06048ac36f36fa4fb7ed4669da5ea2"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2025-12-19",
+      "filename": "DOGE-USDT-SWAP-trades-2025-12-19.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20251219/DOGE-USDT-SWAP-trades-2025-12-19.zip?v=1000",
+      "covers_utc": [
+        1766073600000,
+        1766160000000
+      ],
+      "last_modified": "Wed, 23 Sep 2026 13:37:19 GMT",
+      "etag": "\"B31F79B35FFB6093509CC3420A58BBB6\"",
+      "content_length": "9864925",
+      "downloaded_utc": "2026-11-24T09:12:04Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2025-12-19.csv",
+          "bytes": 97705485
+        }
+      ],
+      "bytes": 9864925,
+      "sha256": "aee027bb494646d680dbcceda086d3b4f934e1ec8f865d9d3d358fda44c97ba5"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-01-24",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-01-24.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20260124/DOGE-USDT-SWAP-L2orderbook-400lv-2026-01-24.tar.gz",
+      "covers_utc": [
+        1769212800000,
+        1769299200000
+      ],
+      "last_modified": "Sun, 25 Jan 2026 00:03:01 GMT",
+      "etag": "\"583DCDEFF3D3DC052DD17EBF438155E5\"",
+      "content_length": "84878168",
+      "downloaded_utc": "2026-11-24T09:12:19Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-01-24.data",
+          "bytes": 791148927
+        }
+      ],
+      "bytes": 84878168,
+      "sha256": "b55980791430c14aa2547ba00c9ef435f37b6d36dde7581071329ab226bb279b"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-01-25",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-01-25.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20260125/DOGE-USDT-SWAP-L2orderbook-400lv-2026-01-25.tar.gz",
+      "covers_utc": [
+        1769299200000,
+        1769385600000
+      ],
+      "last_modified": "Mon, 26 Jan 2026 00:04:31 GMT",
+      "etag": "\"E509B93AD88225D9EA76A93273EB2842\"",
+      "content_length": "136715632",
+      "downloaded_utc": "2026-11-24T09:12:43Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-01-25.data",
+          "bytes": 1013759783
+        }
+      ],
+      "bytes": 136715632,
+      "sha256": "c5f74d5f26c0c0f6f7108e831ce78e3360554bd1a5d80e27f7918a449df2192a"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-01-24",
+      "filename": "DOGE-USDT-SWAP-trades-2026-01-24.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260124/DOGE-USDT-SWAP-trades-2026-01-24.zip?v=1000",
+      "covers_utc": [
+        1769184000000,
+        1769270400000
+      ],
+      "last_modified": "Tue, 22 Sep 2026 14:10:06 GMT",
+      "etag": "\"B9F8B6A1C2E02BCAD4616D60290D6A41\"",
+      "content_length": "4277163",
+      "downloaded_utc": "2026-11-24T09:12:45Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-01-24.csv",
+          "bytes": 40728050
+        }
+      ],
+      "bytes": 4277163,
+      "sha256": "fe29f29a66f844aa15597c4f40ec3ebf6d1cc59f919b792c8b321e8d99001f48"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-01-25",
+      "filename": "DOGE-USDT-SWAP-trades-2026-01-25.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260125/DOGE-USDT-SWAP-trades-2026-01-25.zip?v=1000",
+      "covers_utc": [
+        1769270400000,
+        1769356800000
+      ],
+      "last_modified": "Tue, 22 Sep 2026 14:38:59 GMT",
+      "etag": "\"33DBE3AB836D6F71E58E7DF40AB5E6E2\"",
+      "content_length": "2954316",
+      "downloaded_utc": "2026-11-24T09:12:48Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-01-25.csv",
+          "bytes": 26840730
+        }
+      ],
+      "bytes": 2954316,
+      "sha256": "d60df6192888fc493241d5ecf1fd47efebfa0dc6d773aa5c39be7940674d6480"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-02-12",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-02-12.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20260212/DOGE-USDT-SWAP-L2orderbook-400lv-2026-02-12.tar.gz",
+      "covers_utc": [
+        1770854400000,
+        1770940800000
+      ],
+      "last_modified": "Fri, 13 Feb 2026 00:05:27 GMT",
+      "etag": "\"CAB959D5D83085988E383D475B4D0424\"",
+      "content_length": "184170101",
+      "downloaded_utc": "2026-11-24T09:13:19Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-02-12.data",
+          "bytes": 1238368621
+        }
+      ],
+      "bytes": 184170101,
+      "sha256": "2d94b6a481f219294610349152905ed2f4e52f2f49a8d8847e5976a82a8b9055"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-02-13",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-02-13.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20260213/DOGE-USDT-SWAP-L2orderbook-400lv-2026-02-13.tar.gz",
+      "covers_utc": [
+        1770940800000,
+        1771027200000
+      ],
+      "last_modified": "Sat, 14 Feb 2026 00:04:39 GMT",
+      "etag": "\"1FCF8871E48A207F6A0CC207FC79EDE1\"",
+      "content_length": "168488369",
+      "downloaded_utc": "2026-11-24T09:13:48Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-02-13.data",
+          "bytes": 1176022232
+        }
+      ],
+      "bytes": 168488369,
+      "sha256": "56fa19bb0dfc351e291622ef9530de28dfeac4c84a1b672efd8b24040365401c"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-02-12",
+      "filename": "DOGE-USDT-SWAP-trades-2026-02-12.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260212/DOGE-USDT-SWAP-trades-2026-02-12.zip?v=1000",
+      "covers_utc": [
+        1770825600000,
+        1770912000000
+      ],
+      "last_modified": "Mon, 21 Sep 2026 11:46:39 GMT",
+      "etag": "\"B10E07E66EBCC9B9E625AE80697FFA13\"",
+      "content_length": "7149758",
+      "downloaded_utc": "2026-11-24T09:13:51Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-02-12.csv",
+          "bytes": 69600272
+        }
+      ],
+      "bytes": 7149758,
+      "sha256": "8b5476f5d10c1bb19702f656aa6dd37b07a147ec98f7a9ab7e1f741b43cedb6d"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-02-13",
+      "filename": "DOGE-USDT-SWAP-trades-2026-02-13.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260213/DOGE-USDT-SWAP-trades-2026-02-13.zip?v=1000",
+      "covers_utc": [
+        1770912000000,
+        1770998400000
+      ],
+      "last_modified": "Mon, 21 Sep 2026 12:20:05 GMT",
+      "etag": "\"84666D115351AA4A325050E19FCDDA6D\"",
+      "content_length": "7454476",
+      "downloaded_utc": "2026-11-24T09:13:54Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-02-13.csv",
+          "bytes": 73988307
+        }
+      ],
+      "bytes": 7454476,
+      "sha256": "228d9f014d206e0348ce49be7b46556ac7c1ed4e7a84b3b791747f146afdb1b5"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-06-11",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-06-11.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20260611/DOGE-USDT-SWAP-L2orderbook-400lv-2026-06-11.tar.gz",
+      "covers_utc": [
+        1781136000000,
+        1781222400000
+      ],
+      "last_modified": "Fri, 12 Jun 2026 00:04:48 GMT",
+      "etag": "\"1DBD1F4D62D122CED566822E936935C9\"",
+      "content_length": "90544982",
+      "downloaded_utc": "2026-11-24T09:14:10Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-06-11.data",
+          "bytes": 661384180
+        }
+      ],
+      "bytes": 90544982,
+      "sha256": "fdcb29773935feaa54bf19ae3c841b31b5bc0006bcb77d84652a2dcde0474528"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-06-12",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-06-12.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20260612/DOGE-USDT-SWAP-L2orderbook-400lv-2026-06-12.tar.gz",
+      "covers_utc": [
+        1781222400000,
+        1781308800000
+      ],
+      "last_modified": "Sat, 13 Jun 2026 00:04:54 GMT",
+      "etag": "\"7BAC0AEF23F6699DC81D7501DB4706B9\"",
+      "content_length": "116906343",
+      "downloaded_utc": "2026-11-24T09:14:31Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-06-12.data",
+          "bytes": 792963994
+        }
+      ],
+      "bytes": 116906343,
+      "sha256": "55a4db2f2e11447bcd876f7d78953b27193ce8cb38784c709143f21d0022e34e"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-06-11",
+      "filename": "DOGE-USDT-SWAP-trades-2026-06-11.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260611/DOGE-USDT-SWAP-trades-2026-06-11.zip?v=1000",
+      "covers_utc": [
+        1781107200000,
+        1781193600000
+      ],
+      "last_modified": "Mon, 14 Sep 2026 09:03:30 GMT",
+      "etag": "\"F508FC7A03A00C6271B39E6075175129\"",
+      "content_length": "3465521",
+      "downloaded_utc": "2026-11-24T09:14:32Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-06-11.csv",
+          "bytes": 34981609
+        }
+      ],
+      "bytes": 3465521,
+      "sha256": "7bb819365d2a67309f0612ffb4746db3112be71e7193f2cd1b4eac87ea4426e6"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-06-12",
+      "filename": "DOGE-USDT-SWAP-trades-2026-06-12.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260612/DOGE-USDT-SWAP-trades-2026-06-12.zip?v=1000",
+      "covers_utc": [
+        1781193600000,
+        1781280000000
+      ],
+      "last_modified": "Mon, 14 Sep 2026 09:30:04 GMT",
+      "etag": "\"FF733CC8C95F13037F217BEDA2D963E3\"",
+      "content_length": "5757804",
+      "downloaded_utc": "2026-11-24T09:14:34Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-06-12.csv",
+          "bytes": 59287084
+        }
+      ],
+      "bytes": 5757804,
+      "sha256": "a964e272c60653514e0efded1837d61bd6b54c48b8a7b3ef8229af6392775032"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-06-25",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-06-25.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20260625/DOGE-USDT-SWAP-L2orderbook-400lv-2026-06-25.tar.gz",
+      "covers_utc": [
+        1782345600000,
+        1782432000000
+      ],
+      "last_modified": "Fri, 26 Jun 2026 00:05:32 GMT",
+      "etag": "\"ACE8B1D473FA461D95E4F0339A53E8A9\"",
+      "content_length": "117549991",
+      "downloaded_utc": "2026-11-24T09:14:55Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-06-25.data",
+          "bytes": 804289106
+        }
+      ],
+      "bytes": 117549991,
+      "sha256": "5833effaccc41ecab35dea865ecef5bd549e4e330bf7e1593a9607ebadde139f"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-06-26",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-06-26.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/L2/400lv/daily/20260626/DOGE-USDT-SWAP-L2orderbook-400lv-2026-06-26.tar.gz",
+      "covers_utc": [
+        1782432000000,
+        1782518400000
+      ],
+      "last_modified": "Sat, 27 Jun 2026 00:05:41 GMT",
+      "etag": "\"5CFE81B75238765E6EB3C0EB65A69F6B\"",
+      "content_length": "118128356",
+      "downloaded_utc": "2026-11-24T09:15:15Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-06-26.data",
+          "bytes": 811705237
+        }
+      ],
+      "bytes": 118128356,
+      "sha256": "12173beda54fc4fb0bf273b76ad9563ad6e3261fb8a6ac0e54c39664750dd083"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-06-25",
+      "filename": "DOGE-USDT-SWAP-trades-2026-06-25.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260625/DOGE-USDT-SWAP-trades-2026-06-25.zip?v=1000",
+      "covers_utc": [
+        1782316800000,
+        1782403200000
+      ],
+      "last_modified": "Mon, 14 Sep 2026 15:05:06 GMT",
+      "etag": "\"57C904C6A3073E8911A42F215269EE17\"",
+      "content_length": "4454848",
+      "downloaded_utc": "2026-11-24T09:15:17Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-06-25.csv",
+          "bytes": 43921547
+        }
+      ],
+      "bytes": 4454848,
+      "sha256": "93ae4b80430e8acd16811c991b6bb7f8561d91ebee64c12ea4fbf2c3a08bdabe"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-06-26",
+      "filename": "DOGE-USDT-SWAP-trades-2026-06-26.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260626/DOGE-USDT-SWAP-trades-2026-06-26.zip?v=1000",
+      "covers_utc": [
+        1782403200000,
+        1782489600000
+      ],
+      "last_modified": "Mon, 14 Sep 2026 15:31:45 GMT",
+      "etag": "\"DBB1BEDC841F5694E3D799EDB7E139AD\"",
+      "content_length": "3695342",
+      "downloaded_utc": "2026-11-24T09:15:18Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-06-26.csv",
+          "bytes": 36898932
+        }
+      ],
+      "bytes": 3695342,
+      "sha256": "f74e6bf9cb47a69a0295518a81c4a2c219cab4a2d83ce2f5b73299fb308e886c"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-07-27",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-07-27.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/pro/L2/400lv/daily/20260727/DOGE-USDT-SWAP-L2orderbook-400lv-2026-07-27.tar.gz",
+      "covers_utc": [
+        1785110400000,
+        1785196800000
+      ],
+      "last_modified": "Tue, 28 Jul 2026 00:05:28 GMT",
+      "etag": "\"e52095dcc9a3aa7f44c0d98c94277ac7\"",
+      "content_length": "120490505",
+      "downloaded_utc": "2026-11-24T09:15:23Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-07-27.data",
+          "bytes": 883072745
+        }
+      ],
+      "bytes": 120490505,
+      "sha256": "fff71e30dc806a64316ea857d1f0fc52d1a21cf00b82e567de71c46c024b0557"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-07-28",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-07-28.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/pro/L2/400lv/daily/20260728/DOGE-USDT-SWAP-L2orderbook-400lv-2026-07-28.tar.gz",
+      "covers_utc": [
+        1785196800000,
+        1785283200000
+      ],
+      "last_modified": "Wed, 29 Jul 2026 00:04:45 GMT",
+      "etag": "\"e2ffcaee1d86ad5b59af1c376f94fb6a\"",
+      "content_length": "117364650",
+      "downloaded_utc": "2026-11-24T09:15:29Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-07-28.data",
+          "bytes": 961325235
+        }
+      ],
+      "bytes": 117364650,
+      "sha256": "2ee096e2ded9a3e27021b7d20d11b6d65465e5a523b7a8317a1f40d4d2db0150"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-07-27",
+      "filename": "DOGE-USDT-SWAP-trades-2026-07-27.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260727/DOGE-USDT-SWAP-trades-2026-07-27.zip?v=1000",
+      "covers_utc": [
+        1785081600000,
+        1785168000000
+      ],
+      "last_modified": "Fri, 11 Sep 2026 17:14:34 GMT",
+      "etag": "\"0D21415A49A44A366201A55D4060B850\"",
+      "content_length": "2434491",
+      "downloaded_utc": "2026-11-24T09:15:30Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-07-27.csv",
+          "bytes": 23892180
+        }
+      ],
+      "bytes": 2434491,
+      "sha256": "35252258815dfc51147f693316e0b645fa30aebf10403e4b613d6b8a836fce1e"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-07-28",
+      "filename": "DOGE-USDT-SWAP-trades-2026-07-28.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260728/DOGE-USDT-SWAP-trades-2026-07-28.zip?v=1000",
+      "covers_utc": [
+        1785168000000,
+        1785254400000
+      ],
+      "last_modified": "Fri, 11 Sep 2026 17:40:47 GMT",
+      "etag": "\"F3E37A7AF3C1A282DF39B6430A6AF4D3\"",
+      "content_length": "2545958",
+      "downloaded_utc": "2026-11-24T09:15:32Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-07-28.csv",
+          "bytes": 24461592
+        }
+      ],
+      "bytes": 2545958,
+      "sha256": "c972994d68ea33f5b1a440285c1c2b2283bfdacf98589f50868f56b0f36a9ee2"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-08-04",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-08-04.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/pro/L2/400lv/daily/20260804/DOGE-USDT-SWAP-L2orderbook-400lv-2026-08-04.tar.gz",
+      "covers_utc": [
+        1785801600000,
+        1785888000000
+      ],
+      "last_modified": "Wed, 05 Aug 2026 00:03:04 GMT",
+      "etag": "\"f5af5cc967c47e4c97e910a601f21496\"",
+      "content_length": "81162203",
+      "downloaded_utc": "2026-11-24T09:15:36Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-08-04.data",
+          "bytes": 672199680
+        }
+      ],
+      "bytes": 81162203,
+      "sha256": "35e0ddcbdb0ee4ae093e6d10925b09f371612edbada69749de7c4864f3ab59c5"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-08-05",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-08-05.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/pro/L2/400lv/daily/20260805/DOGE-USDT-SWAP-L2orderbook-400lv-2026-08-05.tar.gz",
+      "covers_utc": [
+        1785888000000,
+        1785974400000
+      ],
+      "last_modified": "Thu, 06 Aug 2026 00:03:27 GMT",
+      "etag": "\"1527a0615f75610c2b49589942a1c331\"",
+      "content_length": "81340338",
+      "downloaded_utc": "2026-11-24T09:15:40Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-08-05.data",
+          "bytes": 662089141
+        }
+      ],
+      "bytes": 81340338,
+      "sha256": "1af8d606ea19ee4c8eb665f926b5de2b5ef71009d636db6b39102b89de773220"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-08-04",
+      "filename": "DOGE-USDT-SWAP-trades-2026-08-04.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260804/DOGE-USDT-SWAP-trades-2026-08-04.zip?v=1000",
+      "covers_utc": [
+        1785772800000,
+        1785859200000
+      ],
+      "last_modified": "Thu, 10 Sep 2026 02:59:07 GMT",
+      "etag": "\"E3C49A619809919F2AEA6E2EB7DC3F1E\"",
+      "content_length": "1573647",
+      "downloaded_utc": "2026-11-24T09:15:41Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-08-04.csv",
+          "bytes": 14902366
+        }
+      ],
+      "bytes": 1573647,
+      "sha256": "85510fe5d64868521cd74580321fbc2f99c09940fecf18aaa68add85f945d81b"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-08-05",
+      "filename": "DOGE-USDT-SWAP-trades-2026-08-05.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260805/DOGE-USDT-SWAP-trades-2026-08-05.zip?v=1000",
+      "covers_utc": [
+        1785859200000,
+        1785945600000
+      ],
+      "last_modified": "Thu, 10 Sep 2026 03:11:58 GMT",
+      "etag": "\"8746A7508327B7E3F964627EB9F49BCD\"",
+      "content_length": "1573143",
+      "downloaded_utc": "2026-11-24T09:15:42Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-08-05.csv",
+          "bytes": 15084403
+        }
+      ],
+      "bytes": 1573143,
+      "sha256": "4040d9744391e9ec4096f60abbc16bd86c06c821515059ff9a9f22684061adb3"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-09-02",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-09-02.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/pro/L2/400lv/daily/20260902/DOGE-USDT-SWAP-L2orderbook-400lv-2026-09-02.tar.gz",
+      "covers_utc": [
+        1788307200000,
+        1788393600000
+      ],
+      "last_modified": "Thu, 03 Sep 2026 00:05:31 GMT",
+      "etag": "\"b1ba9cbfceb1f2e8d250339a1c40d52c\"",
+      "content_length": "124230937",
+      "downloaded_utc": "2026-11-24T09:15:48Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-09-02.data",
+          "bytes": 889483553
+        }
+      ],
+      "bytes": 124230937,
+      "sha256": "fe0548d03408f643433aa7ce3e7a0b9e28dcdbf1917e1b708869e517bc9fe041"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-09-03",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-09-03.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/pro/L2/400lv/daily/20260903/DOGE-USDT-SWAP-L2orderbook-400lv-2026-09-03.tar.gz",
+      "covers_utc": [
+        1788393600000,
+        1788480000000
+      ],
+      "last_modified": "Fri, 04 Sep 2026 00:05:48 GMT",
+      "etag": "\"3be5827349d8df7d79abd841576d171f\"",
+      "content_length": "171333625",
+      "downloaded_utc": "2026-11-24T09:15:56Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-09-03.data",
+          "bytes": 1134969514
+        }
+      ],
+      "bytes": 171333625,
+      "sha256": "331df004f8acbc6de2c23c75668c6c5591421ae4fbd93bffb9b1687845cf6901"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-09-02",
+      "filename": "DOGE-USDT-SWAP-trades-2026-09-02.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260902/DOGE-USDT-SWAP-trades-2026-09-02.zip?v=1000",
+      "covers_utc": [
+        1788278400000,
+        1788364800000
+      ],
+      "last_modified": "Wed, 02 Sep 2026 23:14:24 GMT",
+      "etag": "\"B47AC9C2D8C698D6847949259D7751C5\"",
+      "content_length": "3141001",
+      "downloaded_utc": "2026-11-24T09:15:57Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-09-02.csv",
+          "bytes": 32502403
+        }
+      ],
+      "bytes": 3141001,
+      "sha256": "b36cd027ee78e2eae7a284eb87cace1eccb3b3f8bf6bfb9326260a4003a6d411"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-09-03",
+      "filename": "DOGE-USDT-SWAP-trades-2026-09-03.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260903/DOGE-USDT-SWAP-trades-2026-09-03.zip?v=1000",
+      "covers_utc": [
+        1788364800000,
+        1788451200000
+      ],
+      "last_modified": "Thu, 03 Sep 2026 23:26:30 GMT",
+      "etag": "\"DDCA17126758CB7AC9083C0FE4C24D8F\"",
+      "content_length": "4155995",
+      "downloaded_utc": "2026-11-24T09:15:58Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-09-03.csv",
+          "bytes": 43654397
+        }
+      ],
+      "bytes": 4155995,
+      "sha256": "cf8a15b8662d494c8df1f1e76a7ae80a8ba8a8ebbfb99752b331badd5db00ab6"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-09-11",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-09-11.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/pro/L2/400lv/daily/20260911/DOGE-USDT-SWAP-L2orderbook-400lv-2026-09-11.tar.gz",
+      "covers_utc": [
+        1789084800000,
+        1789171200000
+      ],
+      "last_modified": "Sat, 12 Sep 2026 00:05:50 GMT",
+      "etag": "\"658bfbbb9426a88dbc863a0a8c0fb69f\"",
+      "content_length": "155217993",
+      "downloaded_utc": "2026-11-24T09:16:05Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-09-11.data",
+          "bytes": 1285112288
+        }
+      ],
+      "bytes": 155217993,
+      "sha256": "4edab48818f26355c0e197cae2c4c2e27f0546ea3837ffac10764de3a4a9ca28"
+    },
+    {
+      "kind": "orderbook",
+      "file_date": "2026-09-12",
+      "filename": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-09-12.tar.gz",
+      "url": "https://static.okx.com/cdn/okx/match/orderbook/pro/L2/400lv/daily/20260912/DOGE-USDT-SWAP-L2orderbook-400lv-2026-09-12.tar.gz",
+      "covers_utc": [
+        1789171200000,
+        1789257600000
+      ],
+      "last_modified": "Sun, 13 Sep 2026 00:02:59 GMT",
+      "etag": "\"ad0f1ddb81f2c689d99633546e178b7b\"",
+      "content_length": "113321667",
+      "downloaded_utc": "2026-11-24T09:16:11Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-L2orderbook-400lv-2026-09-12.data",
+          "bytes": 1240961060
+        }
+      ],
+      "bytes": 113321667,
+      "sha256": "5e640b5cbce4811a6109308b8327d9307983da57c6ee74c9de16e650baea9121"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-09-11",
+      "filename": "DOGE-USDT-SWAP-trades-2026-09-11.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260911/DOGE-USDT-SWAP-trades-2026-09-11.zip?v=1000",
+      "covers_utc": [
+        1789056000000,
+        1789142400000
+      ],
+      "last_modified": "Fri, 11 Sep 2026 23:17:51 GMT",
+      "etag": "\"1E8E87F752B3C6D76416F7D6848AB2BD\"",
+      "content_length": "4955499",
+      "downloaded_utc": "2026-11-24T09:16:13Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-09-11.csv",
+          "bytes": 52314555
+        }
+      ],
+      "bytes": 4955499,
+      "sha256": "e902ebb06af1df7975f33c35787656b61b4f101be12d29f9d5be14644de4d000"
+    },
+    {
+      "kind": "trades",
+      "file_date": "2026-09-12",
+      "filename": "DOGE-USDT-SWAP-trades-2026-09-12.zip",
+      "url": "https://static.okx.com/cdn/okex/traderecords/trades/daily/20260912/DOGE-USDT-SWAP-trades-2026-09-12.zip?v=1000",
+      "covers_utc": [
+        1789142400000,
+        1789228800000
+      ],
+      "last_modified": "Sat, 12 Sep 2026 23:13:01 GMT",
+      "etag": "\"6C98ECD20C2B60A893AEA9B6CBD35B02\"",
+      "content_length": "2658959",
+      "downloaded_utc": "2026-11-24T09:16:15Z",
+      "resumed": false,
+      "members": [
+        {
+          "name": "DOGE-USDT-SWAP-trades-2026-09-12.csv",
+          "bytes": 26983583
+        }
+      ],
+      "bytes": 2658959,
+      "sha256": "c84b924fd26c8f189822057092b2b04d0baa1295083e90608d308435fc80d630"
+    }
+  ]
+}
