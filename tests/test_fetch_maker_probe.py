@@ -14,6 +14,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import io
+import json
 import os
 import subprocess
 import tarfile
@@ -264,3 +265,41 @@ def test_download_refuses_a_kept_file_of_the_wrong_size(tmp_path):
     with pytest.raises(fmp.FetchError, match="delete it and rerun"):
         fmp.download(f, tmp_path, opener=FakeOpener({f.url: [body]}), sleep=lambda s: None)
     assert (tmp_path / f.filename).read_bytes() == body[:-40]           # never overwritten
+
+
+# --------------------------------------------------------------------------
+# readers' mode, once the manifest is committed
+# --------------------------------------------------------------------------
+
+def _commit_manifest(repo, files):
+    doc = {"archive_dir": "data/history/maker_probe", "files": files}
+    path = repo.path / fmp.MANIFEST
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(doc))
+    repo.git("add", fmp.MANIFEST)
+    repo.git("commit", "-q", "-m", "manifest")
+
+
+def _listed(f, body, sha=None):
+    return {"kind": f.kind, "file_date": f.file_date, "filename": f.filename, "url": f.url,
+            "covers_utc": f.covers_utc, "sha256": sha or hashlib.sha256(body).hexdigest()}
+
+
+def test_readers_mode_fetches_and_checks_the_listed_files(repo):
+    f, body = archive(), zip_bytes()
+    _commit_manifest(repo, [_listed(f, body)])
+    assert fmp.fetch_listed(repo.path, FakeOpener({f.url: [body]})) == fmp.EXIT_OK
+    assert (repo.path / "data/history/maker_probe" / f.filename).read_bytes() == body
+
+
+def test_readers_mode_fails_on_a_file_that_differs(repo):
+    f, body = archive(), zip_bytes()
+    _commit_manifest(repo, [_listed(f, body, sha="0" * 64)])
+    assert fmp.fetch_listed(repo.path, FakeOpener({f.url: [body]})) == fmp.EXIT_FETCH_FAILED
+
+
+def test_readers_mode_refuses_an_edited_manifest(repo):
+    f, body = archive(), zip_bytes()
+    _commit_manifest(repo, [_listed(f, body)])
+    (repo.path / fmp.MANIFEST).write_text("{}")
+    assert fmp.fetch_listed(repo.path, FakeOpener({f.url: [body]})) == fmp.EXIT_REFUSED

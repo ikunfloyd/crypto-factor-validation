@@ -190,3 +190,49 @@ def test_run_day_parses_checks_and_runs_both_ways(tmp_path):
     # the 00:00 decision has no book yet; decisions after the data are no_data, in both runs
     first = got["orders"]["parser_gaps"].filter(pl.col("decision_ts") == T0)
     assert set(first["status"]) == {"no_data"}
+
+
+# --------------------------------------------------------------------------
+# --verify
+# --------------------------------------------------------------------------
+
+def _csv(df):
+    return df.write_csv()
+
+
+def test_compare_outputs_ignores_only_the_timing_column():
+    committed = pl.DataFrame({"day": ["d"], "rows": [5], "seconds": [12.5], "code_commit": ["c"]})
+    same_but_slower = committed.with_columns(pl.lit(99.0).alias("seconds"))
+    assert rmp.compare_outputs({"checks.csv": _csv(committed)}, {"checks.csv": same_but_slower}) == {"checks.csv": []}
+    other_rows = same_but_slower.with_columns(pl.lit(6).alias("rows"))
+    found = rmp.compare_outputs({"checks.csv": _csv(committed)}, {"checks.csv": other_rows})["checks.csv"]
+    assert len(found) == 1 and "rows" in found[0]
+
+
+def test_compare_outputs_forgives_float_formatting_but_not_values():
+    committed = pl.DataFrame({"run": ["a"], "mean": [0.1 + 0.2]})
+    assert rmp.compare_outputs({"summary.csv": _csv(committed)},
+                               {"summary.csv": pl.DataFrame({"run": ["a"], "mean": [0.3]})}) == {"summary.csv": []}
+    assert rmp.compare_outputs({"summary.csv": _csv(committed)},
+                               {"summary.csv": pl.DataFrame({"run": ["a"], "mean": [0.31]})})["summary.csv"]
+
+
+def test_committed_stamp_must_be_one_pair():
+    a = _csv(pl.DataFrame({"x": [1], "code_commit": ["c1"], "manifest_sha256": ["m"]}))
+    b = _csv(pl.DataFrame({"x": [2], "code_commit": ["c2"], "manifest_sha256": ["m"]}))
+    assert rmp.committed_stamp({"one.csv": a, "two.csv": a}) == ("c1", "m")
+    with pytest.raises(rmp.Refusal, match="2 \\(code_commit, manifest_sha256\\) pairs"):
+        rmp.committed_stamp({"one.csv": a, "two.csv": b})
+
+
+def test_verify_wants_every_output_committed_as_it_stands(repo):
+    repo.commit(rmp.ARCHIVE_MANIFEST, json.dumps(manifest_doc(FILES)))
+    with pytest.raises(rmp.Refusal, match="not committed; there is nothing to verify"):
+        rmp.check_before_verify(repo.path)
+    for name in rmp.OUTPUTS:
+        repo.commit(f"{rmp.OUT_DIR}/{name}", "x\n")
+    manifest, committed = rmp.check_before_verify(repo.path)
+    assert manifest["days"] == [DAY] and set(committed) == set(rmp.OUTPUTS)
+    (repo.path / rmp.OUT_DIR / "daily.csv").write_text("edited\n")
+    with pytest.raises(rmp.Refusal, match="differs from its committed version"):
+        rmp.check_before_verify(repo.path)

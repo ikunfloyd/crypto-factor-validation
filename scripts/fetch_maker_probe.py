@@ -32,6 +32,11 @@ written under a temporary name, read to its end (every gzip or zip CRC
 checked) and only then given its name. The manifest is written once, after
 every file is present and has been read to its end.
 
+Once the manifest is committed, the script serves readers instead: it
+fetches each file the committed manifest lists that is not on disk yet,
+checks every file's SHA-256 against the manifest, and writes nothing else.
+scripts/run_maker_probe.py --verify then recomputes the probe from them.
+
 Usage:
     python scripts/fetch_maker_probe.py
 """
@@ -274,6 +279,33 @@ def download(f: ArchiveFile, dest_dir: Path, *, opener: Callable[..., Any] = _op
 # CLI
 # --------------------------------------------------------------------------
 
+def fetch_listed(root: Path, opener: Callable[..., Any] = _open) -> int:
+    """Readers' mode: the committed manifest's files, each fetched if missing and checked against its SHA-256."""
+    if gitrepo.path_status(root, MANIFEST):
+        logger.error(f"Refusing to download: {MANIFEST} differs from its committed version")
+        return EXIT_REFUSED
+    doc = json.loads(gitrepo.show_file(root, "HEAD", MANIFEST))
+    dest_dir = root / doc["archive_dir"]
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    wrong = []
+    try:
+        for i, f in enumerate(doc["files"], 1):
+            got = download(ArchiveFile(f["kind"], f["file_date"], f["filename"], f["url"], list(f["covers_utc"])),
+                           dest_dir, opener=opener)
+            ok = got["sha256"] == f["sha256"]
+            wrong += [] if ok else [f["filename"]]
+            logger.info(f"[{i}/{len(doc['files'])}] {f['filename']}: " + ("SHA-256 matches" if ok else
+                        f"SHA-256 {got['sha256']}, the manifest says {f['sha256']}"))
+    except ARCHIVE_ERRORS as exc:
+        logger.error(f"Download failed: {exc}. Rerun to resume; files already complete are kept.")
+        return EXIT_FETCH_FAILED
+    if wrong:
+        logger.error(f"{len(wrong)} files differ from the manifest: {', '.join(wrong)}")
+        return EXIT_FETCH_FAILED
+    logger.info(f"All {len(doc['files'])} files match {MANIFEST}; nothing was written but the files.")
+    return EXIT_OK
+
+
 def run(*, root: Path = REPO_ROOT, spec: Optional[Dict[str, Any]] = None,
         opener: Callable[..., Any] = _open) -> int:
     foreign = integrity.foreign_code_problem(REPO_ROOT)
@@ -284,8 +316,11 @@ def run(*, root: Path = REPO_ROOT, spec: Optional[Dict[str, Any]] = None,
     root = Path(root)
     manifest = root / MANIFEST
     try:
+        if gitrepo.is_tracked(root, MANIFEST):
+            return fetch_listed(root, opener)
         if manifest.exists():
-            raise Refusal(f"{MANIFEST} exists; the files were downloaded already", EXIT_EXISTS)
+            raise Refusal(f"{MANIFEST} exists but is not committed; commit it, or remove it to download afresh",
+                          EXIT_EXISTS)
         fwd = doge_fwd_commit(root)
         days = probe_days(root, s)
         cand_rel = s["maker_probe"]["candidates_file"]

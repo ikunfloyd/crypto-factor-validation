@@ -34,14 +34,23 @@ that the manifest is committed once and unchanged, that the code it runs
 and Appendix A have no uncommitted change, and that no output exists or was
 ever committed.
 
+``--verify`` is for readers. It needs the archive files (download them with
+scripts/fetch_maker_probe.py, which checks each against the manifest), runs
+the same computation, stamped with the committed outputs' code_commit, and
+compares each output with its committed text: equal bytes, or equal keys
+and text and numbers equal to 1e-9 (run_oos.results_differences). It writes
+nothing, and exits 0 when everything matches.
+
 Usage:
-    python scripts/run_maker_probe.py
+    python scripts/run_maker_probe.py              # the one run
+    python scripts/run_maker_probe.py --verify     # recompute and compare
 """
 from __future__ import annotations
 
 import argparse
 import atexit
 import dataclasses
+import io
 import json
 import shutil
 import sys
@@ -49,7 +58,7 @@ import tempfile
 import time
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 # Startup, as in the other study scripts: this checkout's packages first on
@@ -67,7 +76,11 @@ from research import maker_probe as mp
 from research.io import sha256_file, write_once_csv
 from research.spec import get_spec
 
+# results_differences: the comparison verify_results.py and run_oos.py's guard 9 use.
+run_oos = integrity.load_script(REPO_ROOT, "run_oos")
+
 EXIT_OK = 0
+EXIT_DIFFERS = 1
 EXIT_REFUSED = 3
 EXIT_EXISTS = 4
 
@@ -199,25 +212,9 @@ def run_day(day: str, paths: Dict[str, List[Path]], cfg: mp.ProbeConfig) -> Dict
 # CLI
 # --------------------------------------------------------------------------
 
-def run(*, root: Path = REPO_ROOT) -> int:
-    foreign = integrity.foreign_code_problem(REPO_ROOT)
-    if foreign:
-        logger.error(f"Refusing to run: {foreign}")
-        return EXIT_REFUSED
-    root = Path(root)
-    try:
-        manifest = check_before_run(root)
-        logger.info(f"Hashing {len(manifest['files'])} archive files")
-        files = check_files(root, manifest)
-    except Refusal as exc:
-        logger.error(f"Refusing to run: {exc}")
-        return exc.code
-    except gitrepo.GitError as exc:
-        logger.error(f"Refusing to run: {exc}")
-        return EXIT_REFUSED
-    cfg = mp.ProbeConfig.from_spec(get_spec())
-    commit = gitrepo.head_commit(root)
-    manifest_sha = sha256_file(root / ARCHIVE_MANIFEST)
+def compute(manifest: Dict[str, Any], files: Dict[str, Path], cfg: mp.ProbeConfig, commit: str,
+            manifest_sha: str) -> Dict[str, pl.DataFrame]:
+    """Every day of the manifest, both runs; the four outputs by file name, stamped with ``commit``."""
     orders: List[pl.DataFrame] = []
     checks: List[Dict[str, Any]] = []
     for day in manifest["days"]:
@@ -236,18 +233,115 @@ def run(*, root: Path = REPO_ROOT) -> int:
     summary = pl.concat([mp.across_days(daily.filter(pl.col("run") == r).drop("run"), cfg)
                          .with_columns(pl.lit(r).alias("run")) for r in RUNS], how="vertical")
     front = lambda df: df.select(["run"] + [c for c in df.columns if c != "run"]).with_columns(stamp)
+    return {"orders.csv": front(all_orders), "daily.csv": front(daily), "summary.csv": front(summary),
+            "checks.csv": pl.DataFrame(checks).with_columns(stamp)}
+
+
+# --------------------------------------------------------------------------
+# --verify: recompute and compare with the committed outputs
+# --------------------------------------------------------------------------
+
+# Wall-clock time per day, in checks.csv: recorded, never compared.
+TIMING = "seconds"
+
+
+def check_before_verify(root: Path) -> Tuple[Dict[str, Any], Dict[str, str]]:
+    """The committed archive manifest and the committed text of each output, refusing a modified one."""
+    if not gitrepo.is_tracked(root, ARCHIVE_MANIFEST) or gitrepo.path_status(root, ARCHIVE_MANIFEST):
+        raise Refusal(f"{ARCHIVE_MANIFEST} is not committed as it stands")
+    committed = {}
+    for name in OUTPUTS:
+        rel = f"{OUT_DIR}/{name}"
+        if not gitrepo.is_tracked(root, rel):
+            raise Refusal(f"{rel} is not committed; there is nothing to verify")
+        if gitrepo.path_status(root, rel):
+            raise Refusal(f"{rel} differs from its committed version")
+        committed[name] = gitrepo.show_file(root, "HEAD", rel)
+    return json.loads(gitrepo.show_file(root, "HEAD", ARCHIVE_MANIFEST)), committed
+
+
+def committed_stamp(committed: Dict[str, str]) -> Tuple[str, str]:
+    """The one (code_commit, manifest_sha256) that every committed output carries."""
+    seen = set()
+    for text in committed.values():
+        df = pl.read_csv(io.StringIO(text), infer_schema_length=0, columns=["code_commit", "manifest_sha256"])
+        seen |= set(zip(df["code_commit"].to_list(), df["manifest_sha256"].to_list()))
+    if len(seen) != 1:
+        raise Refusal(f"the committed outputs carry {len(seen)} (code_commit, manifest_sha256) pairs, not one")
+    return next(iter(seen))
+
+
+def compare_outputs(committed: Dict[str, str], frames: Dict[str, pl.DataFrame]) -> Dict[str, List[str]]:
+    """
+    Per output, where the committed text and the recomputation differ (run_oos.results_differences:
+    equal bytes, or equal keys and text and numbers equal to 1e-9). checks.csv's timing column is
+    taken from the committed file, since a rerun cannot reproduce it.
+    """
+    out = {}
+    for name, frame in frames.items():
+        text = committed[name]
+        if TIMING in frame.columns:
+            old = pl.read_csv(io.StringIO(text), infer_schema_length=0)
+            if TIMING in old.columns and old.height == frame.height:
+                frame = frame.with_columns(old[TIMING].cast(frame[TIMING].dtype).alias(TIMING))
+        out[name] = run_oos.results_differences(text, frame)
+    return out
+
+
+# --------------------------------------------------------------------------
+# CLI
+# --------------------------------------------------------------------------
+
+def run(*, root: Path = REPO_ROOT, verify: bool = False) -> int:
+    action = "verify" if verify else "run"
+    foreign = integrity.foreign_code_problem(REPO_ROOT)
+    if foreign:
+        logger.error(f"Refusing to {action}: {foreign}")
+        return EXIT_REFUSED
+    root = Path(root)
+    try:
+        if verify:
+            manifest, committed = check_before_verify(root)
+            commit, manifest_sha = committed_stamp(committed)
+            if manifest_sha != sha256_file(root / ARCHIVE_MANIFEST):
+                raise Refusal(f"the outputs name another archive manifest ({manifest_sha[:12]}…)")
+        else:
+            manifest = check_before_run(root)
+            commit, manifest_sha = gitrepo.head_commit(root), sha256_file(root / ARCHIVE_MANIFEST)
+        logger.info(f"Hashing {len(manifest['files'])} archive files")
+        files = check_files(root, manifest)
+    except Refusal as exc:
+        logger.error(f"Refusing to {action}: {exc}")
+        return exc.code
+    except gitrepo.GitError as exc:
+        logger.error(f"Refusing to {action}: {exc}")
+        return EXIT_REFUSED
+    frames = compute(manifest, files, mp.ProbeConfig.from_spec(get_spec()), commit, manifest_sha)
+    if verify:
+        changed = [p for p in CODE if gitrepo.git(root, "diff", "--quiet", commit, "HEAD", "--", p,
+                                                  check=False).returncode]
+        if changed:
+            logger.info(f"Code changed since the run ({commit[:12]}): {', '.join(changed)}")
+        diffs = compare_outputs(committed, frames)
+        for name, found in diffs.items():
+            logger.info(f"{name}: " + ("identical" if not found else f"{len(found)} differences, e.g. {found[:3]}"))
+        if any(diffs.values()):
+            logger.error("FAIL: the recomputation differs from the committed outputs")
+            return EXIT_DIFFERS
+        logger.info(f"PASS: every output recomputes to the committed file ({TIMING!r} in checks.csv not compared)")
+        return EXIT_OK
     out = root / OUT_DIR
-    write_once_csv(front(all_orders), out / "orders.csv")
-    write_once_csv(front(daily), out / "daily.csv")
-    write_once_csv(front(summary), out / "summary.csv")
-    write_once_csv(pl.DataFrame(checks).with_columns(stamp), out / "checks.csv")
+    for name, frame in frames.items():
+        write_once_csv(frame, out / name)
     logger.info(f"Wrote {', '.join(OUTPUTS)} to {OUT_DIR}/. Commit them unedited.")
     return EXIT_OK
 
 
 def main(argv: Optional[Sequence[str]] = None, **seams: Any) -> int:
-    argparse.ArgumentParser(description="Run the maker-execution probe once (§11).").parse_args(argv)
-    return run(**seams)
+    p = argparse.ArgumentParser(description="Run the maker-execution probe once (§11).")
+    p.add_argument("--verify", action="store_true",
+                   help="recompute from the archive files and compare with the committed outputs; write nothing")
+    return run(verify=p.parse_args(argv).verify, **seams)
 
 
 if __name__ == "__main__":
