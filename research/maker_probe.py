@@ -1279,8 +1279,13 @@ def touch_mismatch_gaps(book: BookStream, check: SnapshotCheck) -> List[Tuple[in
 #   deleted explicitly: the rebuilt book never holds more than 400 levels a
 #   side (``max_depth`` checks this on every day).
 #   trades (module 1), a .zip holding one CSV: instrument_name, trade_id,
-#   side (the taker's), price, size, created_time (UTC ms); trade ids are
-#   consecutive.
+#   side (the taker's), price, size, created_time (UTC ms), and from the
+#   files dated 2025-11-02 on a seventh column, source (0 or 1); trade ids are
+#   consecutive across both sources. Source-1 trades do not behave as prints
+#   of the public book: on 2026-09-11, 12% of them printed at the touch and
+#   27% at or beyond the opposite best, and none matched in size the book
+#   decrease that followed, against 73%, under 1% and 60% for source 0. They
+#   are kept for the trade-id check and left out of the fill rules.
 #
 # Prices are whole multiples of DOGE-USDT-SWAP's tick, 0.00001. Book and trade
 # sizes carry at most two decimals, in contracts: one unit is 0.01 contract,
@@ -1297,6 +1302,7 @@ MAX_SILENCE_MS = 5_000
 _GRID_TOL = 1e-6              # a price or size this far off its grid, in units, is refused
 _CHUNK_MESSAGES = 250_000
 _TRADE_COLUMNS = ["instrument_name", "trade_id", "side", "price", "size", "created_time"]
+_SOURCE = "source"
 
 
 def _to_units(values: np.ndarray, unit: float, what: str) -> np.ndarray:
@@ -1493,6 +1499,10 @@ def read_trades(paths: Sequence[Path], day: Union[str, date], config: Optional[P
     to 1 ms past the last trade if no trade in the files lies past the
     coverage.
 
+    Trades whose ``source`` is 1 are not prints of the public book (see the
+    format notes above): they count in the trade-id check below and are then
+    left out. Files without the column have source-0 trades only.
+
     Each trade keeps its own timestamp; rows are sorted by (ts, trade id).
     Prices become ticks and sizes units of 0.01 contract, exactly, in the
     BookStream's units. ``aggressor`` is BUY for side "buy" (the taker
@@ -1515,10 +1525,14 @@ def read_trades(paths: Sequence[Path], day: Union[str, date], config: Optional[P
         # Every column as text, under the file's own names: polars 0.20 renames
         # the columns by position when given a dtypes mapping of full width.
         df = pl.read_csv(io.BytesIO(raw), infer_schema_length=0)
-        if df.columns != _TRADE_COLUMNS:
-            raise ValueError(f"{Path(path).name}: columns {df.columns}, expected {_TRADE_COLUMNS}")
+        if df.columns not in (_TRADE_COLUMNS, _TRADE_COLUMNS + [_SOURCE]):
+            raise ValueError(f"{Path(path).name}: columns {df.columns}, expected {_TRADE_COLUMNS} "
+                             f"(and optionally {_SOURCE!r})")
+        if _SOURCE not in df.columns:
+            df = df.with_columns(pl.lit("0").alias(_SOURCE))
         frames.append(df)
-    df = pl.concat(frames) if frames else pl.DataFrame(schema={c: pl.Utf8 for c in _TRADE_COLUMNS})
+    df = (pl.concat(frames) if frames
+          else pl.DataFrame(schema={c: pl.Utf8 for c in _TRADE_COLUMNS + [_SOURCE]}))
     n_other = int((df["instrument_name"] != inst_id).sum())
     df = df.filter(pl.col("instrument_name") == inst_id).with_columns(
         pl.col("trade_id").cast(pl.Int64), pl.col("created_time").cast(pl.Int64))
@@ -1534,17 +1548,24 @@ def read_trades(paths: Sequence[Path], day: Union[str, date], config: Optional[P
     bad_side = df.filter(~pl.col("side").is_in(["buy", "sell"]))
     if bad_side.height:
         raise ValueError(f"trade {bad_side['trade_id'][0]}: side {bad_side['side'][0]!r}")
+    bad_source = df.filter(~pl.col(_SOURCE).is_in(["0", "1"]))
+    if bad_source.height:
+        raise ValueError(f"trade {bad_source['trade_id'][0]}: source {bad_source[_SOURCE][0]!r}")
     by_id = df.sort("trade_id")
     ids = by_id["trade_id"].to_numpy()
     id_ts = by_id["created_time"].to_numpy()
     jumps = np.flatnonzero(np.diff(ids) != 1)
     gaps = merge_gaps([(int(min(id_ts[j], id_ts[j + 1])), int(max(id_ts[j], id_ts[j + 1])) + 1) for j in jumps])
-    df = df.sort(["created_time", "trade_id"])
+    n_source_1 = int((df[_SOURCE] == "1").sum())
+    df = df.filter(pl.col(_SOURCE) == "0").sort(["created_time", "trade_id"])
+    if df.height == 0:
+        raise ValueError(f"no source-0 trade of {inst_id} in [{start}, {end})")
     ts = df["created_time"].to_numpy().astype(np.int64)
     end_ms = end if past_end else int(ts[-1]) + 1
     gaps = [(lo, min(hi, end_ms)) for lo, hi in gaps if lo < end_ms]
     if report is not None:
-        report.update(trades=df.height, other_instruments=n_other, duplicate_rows=n_duplicates,
+        report.update(trades=df.height, source_1_trades=n_source_1, other_instruments=n_other,
+                      duplicate_rows=n_duplicates,
                       id_jumps=int(jumps.size), ids_out_of_time_order=int(np.sum(np.diff(id_ts) < 0)),
                       ended_early=not past_end, start_ms=start, end_ms=end_ms)
     return TradeStream(

@@ -187,6 +187,27 @@ class TestReadTrades:
         with pytest.raises(ValueError, match=why):
             probe.read_trades([trade_file(tmp_path, "d", [bad])], DAY)
 
+    def test_source_one_trades_are_left_out_but_keep_the_ids_consecutive(self, tmp_path):
+        header = "instrument_name,trade_id,side,price,size,created_time,source"
+        d = trade_file(tmp_path, "d", [trade(1, T0 + 10) + ("0",), trade(2, T0 + 20, "sell", "0.19990") + ("1",),
+                                       trade(3, T0 + 30) + ("0",), trade(4, END) + ("0",)], header=header)
+        rep = {}
+        tr = probe.read_trades([d], DAY, report=rep)
+        assert tr.ts_ms.tolist() == [T0 + 10, T0 + 30] and tr.gaps.size == 0
+        assert rep["source_1_trades"] == 1 and rep["trades"] == 2 and rep["id_jumps"] == 0
+
+    def test_files_with_and_without_the_source_column_join(self, tmp_path):
+        d = trade_file(tmp_path, "d", [trade(1, T0 + 10)])
+        d1 = trade_file(tmp_path, "d1", [trade(2, T0 + 20) + ("0",), trade(3, END) + ("0",)],
+                        header="instrument_name,trade_id,side,price,size,created_time,source")
+        assert probe.read_trades([d, d1], DAY).ts_ms.tolist() == [T0 + 10, T0 + 20]
+
+    def test_refuses_an_unknown_source(self, tmp_path):
+        d = trade_file(tmp_path, "d", [trade(1, T0 + 10) + ("2",)],
+                       header="instrument_name,trade_id,side,price,size,created_time,source")
+        with pytest.raises(ValueError, match="source"):
+            probe.read_trades([d], DAY)
+
     def test_refuses_other_columns(self, tmp_path):
         d = trade_file(tmp_path, "d", [trade(1, T0 + 1)], header="instrument_name,trade_id,side,px,size,created_time")
         with pytest.raises(ValueError, match="columns"):
