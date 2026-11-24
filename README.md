@@ -74,7 +74,9 @@ exchange and one fee schedule.
   Heritage archived the publication and freeze commits at 08:55 UTC
   ([`swh:1:snp:7baf60bb…`](https://archive.softwareheritage.org/swh:1:snp:7baf60bb2da0a53f8120a3ff56074ac410fb1b28)).
   That was before the freeze amendment (09:01), which the download script requires on the public
-  `main` before it fetches test data, so the archive predates every test-set download.
+  `main` before it fetches test data, so the archive predates every test-set download. It archived
+  the repository again at 20:19 UTC on 2026-11-24, with every result, the report and the tools
+  for readers ([`swh:1:snp:5175c6ab…`](https://archive.softwareheritage.org/swh:1:snp:5175c6abbc6e3cd45e0bc7d7b9c6a78de259b6c4)).
 - **One run per set, guarded in code.** [`scripts/run_oos.py`](scripts/run_oos.py) refuses to run
   if any file outside `docs/` and `results/` changed after the tag, if an input file's SHA-256
   differs from the set's committed manifest, or if the set's results exist or were ever committed.

@@ -33,7 +33,7 @@
 **记录**
 
 - **先公开计划，再下载检验集。** [预注册文件](docs/preregistration.md)固定了 60 个单元、统计量和判定规则，于 2026-10-12 07:37 UTC 以 [GitHub Release](https://github.com/ikunfloyd/crypto-factor-validation/releases/tag/prereg-publication) 的形式公开，早于检验集的下载。它的 §3 列出了此前每一次接触检验期数据的情况，包括规划阶段下载过的、落在检验期内的几个存档文件。
-- **冻结，并独立存档。** 每个单元的交易方向由样本内年份确定，写入 `results/insample_v2.csv`，所在提交打上 `prereg-freeze` 标签；方向连同每个单元的最小可检测效应，一起抄入[冻结补充文件](docs/preregistration-freeze.md)。Software Heritage 于 08:55 UTC 存档了发布提交和冻结提交（[`swh:1:snp:7baf60bb…`](https://archive.softwareheritage.org/swh:1:snp:7baf60bb2da0a53f8120a3ff56074ac410fb1b28)）。这次存档早于冻结补充文件（09:01），而下载脚本要等冻结补充文件出现在公开的 `main` 上才肯下载检验数据，所以存档早于任何一个检验集的下载。
+- **冻结，并独立存档。** 每个单元的交易方向由样本内年份确定，写入 `results/insample_v2.csv`，所在提交打上 `prereg-freeze` 标签；方向连同每个单元的最小可检测效应，一起抄入[冻结补充文件](docs/preregistration-freeze.md)。Software Heritage 于 08:55 UTC 存档了发布提交和冻结提交（[`swh:1:snp:7baf60bb…`](https://archive.softwareheritage.org/swh:1:snp:7baf60bb2da0a53f8120a3ff56074ac410fb1b28)）。这次存档早于冻结补充文件（09:01），而下载脚本要等冻结补充文件出现在公开的 `main` 上才肯下载检验数据，所以存档早于任何一个检验集的下载。2026-11-24 20:19 UTC，Software Heritage 再次存档了仓库，其中包括全部结果、报告和供读者复核的工具（[`swh:1:snp:5175c6ab…`](https://archive.softwareheritage.org/swh:1:snp:5175c6abbc6e3cd45e0bc7d7b9c6a78de259b6c4)）。
 - **每个检验集只跑一次，由代码把关。** 只要出现以下任一情况，[`scripts/run_oos.py`](scripts/run_oos.py) 就拒绝运行：打标签之后 `docs/` 和 `results/` 以外有文件改动；某个输入文件的 SHA-256 与该检验集已提交的清单不符；该检验集的结果已经存在，或曾经提交过。这些检查能拦住失误，并让任何偏离都只能是有意为之，但拦不住掌控这台机器的作者本人。每个检验集只运行一次、没有重跑，这一点靠的是公开的提交记录，以及结果能用公开数据复现（怎么复现、能做到哪一步，见「复现」）。
 - **逐条对照计划。** [结果对照](docs/preregistration-results.md)把每项结果与预注册里「检验什么、如何解读」逐条比较。所有偏离都按日期记在预注册的偏离日志（§12）里。
 
