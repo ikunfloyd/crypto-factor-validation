@@ -10,6 +10,7 @@ it. git runs with the user's global and system config disabled.
 """
 from __future__ import annotations
 
+import importlib.machinery
 import os
 import subprocess
 from pathlib import Path
@@ -120,7 +121,10 @@ def test_a_submodule_is_refused(repo):
 
 
 def test_ignored_files_python_could_import(repo):
-    for rel in ("yaml.pyc", "scripts/yaml.pyc", "research/fast.cpython-310-darwin.so", "build/lib/research/a.py",
+    # This platform's own ABI tag (.cpython-310-darwin.so on the Mac that ran the study,
+    # .cpython-310-x86_64-linux-gnu.so on CI): an extension built for another platform is not importable.
+    ext = "research/fast" + importlib.machinery.EXTENSION_SUFFIXES[0]
+    for rel in ("yaml.pyc", "scripts/yaml.pyc", ext, "build/lib/research/a.py",
                 # unreachable: __pycache__ is never read (a stray helper.pyc there included), and no
                 # import names a hyphen or another Python's ABI tag
                 "research/__pycache__/a.cpython-310.pyc", "research/__pycache__/helper.pyc",
@@ -128,8 +132,8 @@ def test_ignored_files_python_could_import(repo):
         repo.write(rel, b"x")
     repo.write(".git/info/exclude", "docs/dev-notes/\n")
     assert repo.git("status", "--porcelain") == ""
-    assert sorted(gitrepo.ignored_importable(repo.path)) == [
-        "build/lib/research/a.py", "research/fast.cpython-310-darwin.so", "scripts/yaml.pyc", "yaml.pyc"]
+    assert sorted(gitrepo.ignored_importable(repo.path)) == sorted([
+        "build/lib/research/a.py", ext, "scripts/yaml.pyc", "yaml.pyc"])
 
 
 def test_tree_problems_names_each_kind(repo):
