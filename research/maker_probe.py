@@ -1187,8 +1187,8 @@ def check_snapshots(book: BookStream, depth: int, rows: Optional[Sequence[int]] 
     ``rows`` are reset rows; by default every reset row except each side's
     first, before which nothing has been rebuilt. Run it on the parsed
     archive day before ``simulate``: §11 checks the rebuilt book against the
-    archive's snapshots (§11 expected one every 15 minutes; the archive has
-    one every minute, and each is checked). ``after_gap`` marks mismatches at a
+    archive's snapshots, each of them (one a minute in the files up to
+    2025-12-07, one every 15 minutes after). ``after_gap`` marks mismatches at a
     snapshot that ends one of ``book.gaps``, where a difference is expected.
     """
     if rows is None:
@@ -1272,10 +1272,11 @@ def touch_mismatch_gaps(book: BookStream, check: SnapshotCheck) -> List[Tuple[in
 #   order book (module 4), a .tar.gz holding one file: one JSON object per
 #   line, {"instId", "action": "snapshot" | "update", "ts", "asks", "bids"},
 #   each level [price, size, orders] as strings. There is no sequence number
-#   and no checksum. Each minute opens with a snapshot of both sides (400
-#   levels each, stamped a few ms past the minute), not every 15 minutes as
-#   §11 assumed; updates come in batches about 10 ms apart, each setting a
-#   level's new total size (0 deletes it). A level that leaves the top 400 is
+#   and no checksum. A snapshot of both sides (400 levels each, stamped a few
+#   ms past its minute) opens every minute in the files up to 2025-12-07 and
+#   every 15 minutes, as §11 assumed, from the file dated 2025-12-08; updates
+#   come in batches about 10 ms apart, each setting a level's new total size
+#   (0 deletes it). A level that leaves the top 400 is
 #   deleted explicitly: the rebuilt book never holds more than 400 levels a
 #   side (``max_depth`` checks this on every day).
 #   trades (module 1), a .zip holding one CSV: instrument_name, trade_id,
