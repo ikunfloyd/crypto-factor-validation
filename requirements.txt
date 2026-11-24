@@ -26,6 +26,13 @@ loguru==0.7.2
 pytz>=2023.3
 pyyaml==6.0.1           # research/spec.py parses the pre-registration's Appendix A
 
+# Figures of the factor-research report (scripts/make_figures.py). The PyPI
+# wheels are pinned: their bundled FreeType draws the committed figures'
+# pixels; a conda-forge matplotlib links another FreeType.
+matplotlib==3.9.2
+pillow==10.4.0
+pyparsing==3.3.3        # matplotlib 3.9.2 calls names that pyparsing 3.3 deprecates
+
 # Dashboard (optional, only for the Streamlit monitor)
 streamlit==1.33.0
 plotly==5.18.0

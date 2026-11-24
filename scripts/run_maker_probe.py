@@ -38,8 +38,9 @@ ever committed.
 scripts/fetch_maker_probe.py, which checks each against the manifest), runs
 the same computation, stamped with the committed outputs' code_commit, and
 compares each output with its committed text: equal bytes, or equal keys
-and text and numbers equal to 1e-9 (run_oos.results_differences). It writes
-nothing, and exits 0 when everything matches.
+and text and numbers equal to 1e-9 (run_oos.results_differences, which writes
+the recomputation to a temporary directory and removes it). It keeps no file,
+and exits 0 when everything matches.
 
 Usage:
     python scripts/run_maker_probe.py              # the one run
@@ -76,7 +77,7 @@ from research import maker_probe as mp
 from research.io import sha256_file, write_once_csv
 from research.spec import get_spec
 
-# results_differences: the comparison verify_results.py and run_oos.py's guard 9 use.
+# results_differences: the comparison run_oos.py's guard 9 uses.
 run_oos = integrity.load_script(REPO_ROOT, "run_oos")
 
 EXIT_OK = 0
@@ -340,7 +341,7 @@ def run(*, root: Path = REPO_ROOT, verify: bool = False) -> int:
 def main(argv: Optional[Sequence[str]] = None, **seams: Any) -> int:
     p = argparse.ArgumentParser(description="Run the maker-execution probe once (§11).")
     p.add_argument("--verify", action="store_true",
-                   help="recompute from the archive files and compare with the committed outputs; write nothing")
+                   help="recompute from the archive files and compare with the committed outputs; keep no file")
     return run(verify=p.parse_args(argv).verify, **seams)
 
 
