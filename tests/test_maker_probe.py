@@ -168,12 +168,6 @@ class TestSpec:
         lo, hi = probe.required_coverage(DAY, CFG)
         assert lo == T0 and hi == T0 + 86_400_000 + 11 * MIN + 1      # D+1 00:11:00.001
 
-    def test_parsers_are_stubs(self):
-        with pytest.raises(NotImplementedError):
-            probe.read_book([], DAY)
-        with pytest.raises(NotImplementedError):
-            probe.read_trades([], DAY)
-
 
 class TestContract:
     def test_rejects_unsorted_and_out_of_coverage(self):

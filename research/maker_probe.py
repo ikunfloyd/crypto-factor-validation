@@ -8,8 +8,8 @@ downloaded before ``doge_fwd`` had run (§12, 2026-10-12), so the engine was
 written against an explicit in-memory input contract (BookStream,
 TradeStream), checked on synthetic days only, and committed before any file
 was downloaded. The two archive parsers, ``read_book`` and ``read_trades``,
-are stubs whose docstrings state that contract: they depend on the files'
-format, so they are written once the files are here.
+depend on the files' format, so they were written once the files were here,
+to that contract; their section records the format as found.
 
 Time. "The state at t" is the book after every row with ``ts <= t``. A
 decision at t0 posts against the state at t0, so rows and trades stamped t0
@@ -75,7 +75,11 @@ one-sided or crossed book is counted and excluded, never imputed.
 """
 from __future__ import annotations
 
+import io
+import json
 import math
+import tarfile
+import zipfile
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -114,7 +118,8 @@ __all__ = [
     "decision_times", "required_coverage", "simulate", "simulate_day",
     "daily_summary", "across_days", "rebuilt_levels_before", "snapshot_levels",
     "compare_book", "check_snapshots", "touch_mismatch_gaps", "merge_gaps",
-    "Mismatch", "SnapshotCheck", "read_book", "read_trades",
+    "Mismatch", "SnapshotCheck", "read_book", "read_trades", "max_depth", "trade_book_lags",
+    "BOOK_DEPTH", "TICK_SIZE", "SIZE_UNIT", "MAX_SILENCE_MS",
 ]
 
 
@@ -1182,7 +1187,8 @@ def check_snapshots(book: BookStream, depth: int, rows: Optional[Sequence[int]] 
     ``rows`` are reset rows; by default every reset row except each side's
     first, before which nothing has been rebuilt. Run it on the parsed
     archive day before ``simulate``: §11 checks the rebuilt book against the
-    archive's 15-minute snapshots. ``after_gap`` marks mismatches at a
+    archive's snapshots (§11 expected one every 15 minutes; the archive has
+    one every minute, and each is checked). ``after_gap`` marks mismatches at a
     snapshot that ends one of ``book.gaps``, where a difference is expected.
     """
     if rows is None:
@@ -1257,102 +1263,404 @@ def touch_mismatch_gaps(book: BookStream, check: SnapshotCheck) -> List[Tuple[in
 
 
 # --------------------------------------------------------------------------
-# archive parsers: written once the files are downloaded
+# archive parsers: written once the files were downloaded
 # --------------------------------------------------------------------------
 
-def read_book(paths: Sequence[Path], day: Union[str, date], config: Optional[ProbeConfig] = None) -> BookStream:
+# The archive as read on 2026-11-24, after doge_fwd had run and before any
+# probe statistic was computed (pre-registration §12):
+#
+#   order book (module 4), a .tar.gz holding one file: one JSON object per
+#   line, {"instId", "action": "snapshot" | "update", "ts", "asks", "bids"},
+#   each level [price, size, orders] as strings. There is no sequence number
+#   and no checksum. Each minute opens with a snapshot of both sides (400
+#   levels each, stamped a few ms past the minute), not every 15 minutes as
+#   §11 assumed; updates come in batches about 10 ms apart, each setting a
+#   level's new total size (0 deletes it). A level that leaves the top 400 is
+#   deleted explicitly: the rebuilt book never holds more than 400 levels a
+#   side (``max_depth`` checks this on every day).
+#   trades (module 1), a .zip holding one CSV: instrument_name, trade_id,
+#   side (the taker's), price, size, created_time (UTC ms); trade ids are
+#   consecutive.
+#
+# Prices are whole multiples of DOGE-USDT-SWAP's tick, 0.00001. Book and trade
+# sizes carry at most two decimals, in contracts: one unit is 0.01 contract,
+# OKX's lot size for this swap; trade_book_lags checks that a trade's size
+# and the book decrease it causes are in the same unit.
+BOOK_DEPTH = 400
+TICK_SIZE = 0.00001
+SIZE_UNIT = 0.01
+# Without sequence numbers a lost stretch of the stream can only show as a
+# pause. Updates arrive about every 10 ms, and the longest pause on the first
+# day read was 0.6 s; a pause of MAX_SILENCE_MS or more counts as missing
+# data (decided before any probe statistic was computed).
+MAX_SILENCE_MS = 5_000
+_GRID_TOL = 1e-6              # a price or size this far off its grid, in units, is refused
+_CHUNK_MESSAGES = 250_000
+_TRADE_COLUMNS = ["instrument_name", "trade_id", "side", "price", "size", "created_time"]
+
+
+def _to_units(values: np.ndarray, unit: float, what: str) -> np.ndarray:
+    """Decimal strings (or floats) as exact int64 multiples of ``unit``; raise on any value off the grid."""
+    x = np.asarray(values, dtype=np.float64) / unit
+    r = np.rint(x)
+    bad = np.flatnonzero(np.abs(x - r) > _GRID_TOL)
+    if bad.size:
+        raise ValueError(f"{what} {values[bad[0]]!r} is not a whole multiple of {unit}")
+    return r.astype(np.int64)
+
+
+def _book_messages(paths: Sequence[Path]):
+    """Each order-book message of the files in turn, in file order, as parsed JSON."""
+    for path in paths:
+        with tarfile.open(path, "r|gz") as tf:
+            n_files = 0
+            for member in tf:
+                if not member.isfile():
+                    continue
+                n_files += 1
+                if n_files > 1:
+                    raise ValueError(f"{Path(path).name}: more than one file in the archive")
+                for line in tf.extractfile(member):
+                    if line.strip():
+                        yield json.loads(line)
+
+
+def read_book(paths: Sequence[Path], day: Union[str, date], config: Optional[ProbeConfig] = None, *,
+              inst_id: str = "DOGE-USDT-SWAP", report: Optional[Dict[str, Any]] = None) -> BookStream:
     """
     Parse OKX's 400-level order-book archive (module 4) for probe day D into
-    a BookStream. Not implemented yet: it is written once the files are
-    downloaded, which §12 (2026-10-12) allows only after ``doge_fwd`` has run.
+    a BookStream.
 
-    Input: the files dated D and D+1. They are dated in UTC; each covers its
-    date's 00:00 -> 24:00 UTC. D+1 supplies the markouts of D's last
-    decisions.
+    ``paths`` are the files dated D and D+1, in that order. They are dated in
+    UTC; each covers its date's 00:00 -> 24:00 UTC, and D+1 supplies the
+    markouts of D's last decisions. Only messages stamped in
+    ``required_coverage(D)`` = [D 00:00, D+1 00:11:00.001) are kept, and
+    reading stops at the first message past it. If the files end before it,
+    ``end_ms`` is lowered to 1 ms past the last message, and the markouts
+    beyond are counted as beyond the data.
 
-    What the parser must deliver (``simulate`` relies on every point):
+    Rows keep the files' order: they are never re-sorted by time, since a row
+    sets a level's total size and two rows applied out of order would leave a
+    wrong level until the next snapshot. ``msg`` numbers the messages; every
+    row of a message carries its timestamp. A message stamped earlier than
+    the one before it is raised to that one's timestamp, and counted.
 
-      * Only rows with ts in ``required_coverage(D)`` = [D 00:00, D+1
-        00:11:00.001); stop reading past it. ``start_ms``/``end_ms`` are that
-        window, with ``end_ms`` lowered to the end of the data if a file
-        stops early (markouts past it are then counted as beyond the data).
-      * Rows in the archive's sequence order: by its sequence field (seqId)
-        if it has one, else in file order. Never re-sort them by time: a row
-        sets a new total size, so two rows applied out of sequence leave a
-        wrong level in the book until the next snapshot, and nothing flags
-        it. ``msg`` numbers the messages in that order, and every row of a
-        message carries the message's timestamp (UTC ms). A message stamped
-        earlier than the one before it is raised to that one's timestamp;
-        the number of such clamps and the largest are reported.
-      * A snapshot message (``action`` "snapshot", including the archive's
-        15-minute snapshots and the one opening each file) becomes, per side,
-        a reset row followed by that side's other levels, all in the
-        message; an empty side is a reset row of size 0. An update message
-        becomes one row per level with the new total size (0 deletes).
-      * Prices as int64 ticks: round(price / tick_size), refusing any price
-        more than 1e-6 ticks off a multiple. tick_size comes from the
-        instrument's metadata for the day (0.00001 for DOGE-USDT-SWAP when
-        last seen) and is checked against the data.
-      * Sizes as int64 multiples of one unit (the smallest increment in the
-        files), exact, in the unit TradeStream uses: contracts, unless the
-        files say otherwise. Check the unit by matching trades with the book
-        decreases they cause.
-      * Depth. Whether a level that leaves the top 400 is deleted explicitly
-        is read off the files. If it is not, the parser truncates each side
-        to its best 400 levels after every message, by emitting size-0 rows
-        for the rest: otherwise a level cancelled while out of view stays in
-        the rebuilt book, and when the price comes back it can become the
-        best level and set the order price, the queue and the mids.
-      * Gaps, never patched. A sequence break (seqId / prevSeqId, or a failed
-        checksum) is a gap [ts of the last message before the break, ts of
-        the next snapshot). The rows in between may be kept or dropped: no
-        state inside a gap is read. A break with no snapshot after it lowers
-        ``end_ms`` to the last good message's ts instead.
+    A snapshot message becomes, for each side, a reset row carrying its best
+    level followed by the side's other levels (an empty side is a reset row
+    of size 0); an update message becomes one row per level, with the new
+    total size (0 deletes the level).
 
-    Then run ``check_snapshots(book, depth=400)`` and report its result. A
-    snapshot whose best level on either side differs from the rebuilt book
-    (rank 0, price or size) makes the interval since that side's previous
-    snapshot a gap as well: ``touch_mismatch_gaps`` computes them, and
-    ``simulate`` runs on ``dataclasses.replace(book, gaps=...)``. The gaps
-    and the decisions and markouts they cost are reported with the results.
+    Gaps. The archive has neither sequence numbers nor checksums, so a
+    sequence break cannot be seen directly; a pause of MAX_SILENCE_MS or
+    more between two messages is treated as missing data, a gap from the
+    last message before it to the next snapshot. A pause with no snapshot
+    after it lowers ``end_ms`` to 1 ms past the last message before it, and
+    the rows after it are dropped.
+
+    ``report``, if given, receives the counts the run reports: messages,
+    rows, snapshots, other instruments' messages skipped, clamped messages
+    and the largest clamp, the longest pause, the pauses treated as missing
+    data, and whether the files ended inside the coverage.
+
+    Then run ``check_snapshots(book, BOOK_DEPTH)``. The probe is simulated
+    twice (scripts/run_maker_probe.py; pre-registration §12, 2026-11-24):
+    with only the gaps found here, and with ``touch_mismatch_gaps`` added,
+    which drops the interval since a side's previous snapshot wherever a
+    snapshot's best level differs from the rebuilt book. Both are reported.
     """
-    raise NotImplementedError("read_book is written once the archive files are downloaded (pre-registration §12, 2026-10-12)")
+    cfg = _default(config)
+    start, end = required_coverage(day, cfg)
+    ts_parts: List[np.ndarray] = []
+    side_parts: List[np.ndarray] = []
+    px_parts: List[np.ndarray] = []
+    sz_parts: List[np.ndarray] = []
+    reset_parts: List[np.ndarray] = []
+    msg_parts: List[np.ndarray] = []
+    c_ts: List[int] = []
+    c_side: List[int] = []
+    c_px: List[str] = []
+    c_sz: List[str] = []
+    c_reset: List[bool] = []
+    c_msg: List[int] = []
+
+    def flush() -> None:
+        if c_ts:
+            ts_parts.append(np.array(c_ts, dtype=np.int64))
+            side_parts.append(np.array(c_side, dtype=np.int8))
+            px_parts.append(_to_units(np.array(c_px, dtype=np.float64), TICK_SIZE, "price"))
+            sz_parts.append(_to_units(np.array(c_sz, dtype=np.float64), SIZE_UNIT, "size"))
+            reset_parts.append(np.array(c_reset, dtype=np.bool_))
+            msg_parts.append(np.array(c_msg, dtype=np.int64))
+            for buf in (c_ts, c_side, c_px, c_sz, c_reset, c_msg):
+                buf.clear()
+
+    n_msg = n_snap = n_other = n_clamped = max_clamp = longest = 0
+    last_ts: Optional[int] = None
+    last_px = {BID: None, ASK: None}
+    silences: List[Tuple[int, int]] = []
+    snapshot_ts: List[int] = []
+    reached_end = False
+    for obj in _book_messages(paths):
+        if obj.get("instId") != inst_id:
+            n_other += 1
+            continue
+        ts = int(obj["ts"])
+        if ts < start:
+            continue
+        if ts >= end:
+            reached_end = True
+            break
+        action = obj.get("action")
+        if action not in ("snapshot", "update"):
+            raise ValueError(f"message at {ts}: unknown action {action!r}")
+        if last_ts is not None:
+            if ts < last_ts:
+                n_clamped += 1
+                max_clamp = max(max_clamp, last_ts - ts)
+                ts = last_ts
+            pause = ts - last_ts
+            longest = max(longest, pause)
+            if pause >= MAX_SILENCE_MS:
+                silences.append((last_ts, ts))
+        last_ts = ts
+        snap = action == "snapshot"
+        if snap:
+            n_snap += 1
+            snapshot_ts.append(ts)
+        for key, s in (("bids", BID), ("asks", ASK)):
+            levels = obj.get(key) or []
+            if snap and not levels:
+                other = obj.get("asks" if s == BID else "bids") or []
+                p = last_px[s] or (other[0][0] if other else last_px[-s])
+                if p is None:
+                    raise ValueError(f"message at {ts}: a snapshot with both sides empty")
+                levels = [[p, "0", "0"]]
+            if not levels:
+                continue
+            k = len(levels)
+            c_ts.extend([ts] * k)
+            c_side.extend([s] * k)
+            c_px.extend(lv[0] for lv in levels)
+            c_sz.extend(lv[1] for lv in levels)
+            c_reset.extend([snap] + [False] * (k - 1))
+            c_msg.extend([n_msg] * k)
+            last_px[s] = levels[0][0]
+        n_msg += 1
+        if n_msg % _CHUNK_MESSAGES == 0:
+            flush()
+    flush()
+    ts_all = np.concatenate(ts_parts) if ts_parts else np.zeros(0, np.int64)
+    cols = [ts_all,
+            np.concatenate(side_parts) if side_parts else np.zeros(0, np.int8),
+            np.concatenate(px_parts) if px_parts else np.zeros(0, np.int64),
+            np.concatenate(sz_parts) if sz_parts else np.zeros(0, np.int64),
+            np.concatenate(reset_parts) if reset_parts else np.zeros(0, np.bool_),
+            np.concatenate(msg_parts) if msg_parts else np.zeros(0, np.int64)]
+    if last_ts is None:
+        raise ValueError(f"no order-book message of {inst_id} in [{start}, {end})")
+    end_ms = end if reached_end else min(end, last_ts + 1)
+    snaps = np.array(snapshot_ts, dtype=np.int64)
+    gaps: List[Tuple[int, int]] = []
+    for lo, after in silences:
+        k = int(np.searchsorted(snaps, after))
+        if k < snaps.size:
+            gaps.append((lo, int(snaps[k])))
+        else:
+            end_ms = min(end_ms, lo + 1)
+            break
+    keep = ts_all < end_ms
+    if not keep.all():
+        cols = [c[keep] for c in cols]
+    gaps = [(lo, hi) for lo, hi in merge_gaps(gaps) if hi <= end_ms]
+    if report is not None:
+        report.update(messages=n_msg, rows=int(cols[0].size), snapshots=n_snap, other_instruments=n_other,
+                      clamped=n_clamped, max_clamp_ms=max_clamp, longest_pause_ms=longest,
+                      pauses_as_gaps=[list(g) for g in silences], ended_early=not reached_end,
+                      start_ms=start, end_ms=end_ms)
+    return BookStream(ts_ms=cols[0], side=cols[1], price=cols[2], size=cols[3], reset=cols[4], msg=cols[5],
+                      start_ms=start, end_ms=end_ms, tick_size=TICK_SIZE, size_unit=SIZE_UNIT, gaps=gaps)
 
 
-def read_trades(paths: Sequence[Path], day: Union[str, date], config: Optional[ProbeConfig] = None) -> TradeStream:
+def read_trades(paths: Sequence[Path], day: Union[str, date], config: Optional[ProbeConfig] = None, *,
+                inst_id: str = "DOGE-USDT-SWAP", report: Optional[Dict[str, Any]] = None) -> TradeStream:
     """
     Parse OKX's trade archive (module 1) for probe day D into a TradeStream.
-    Not implemented yet: it is written once the files are downloaded, which
-    §12 (2026-10-12) allows only after ``doge_fwd`` has run.
 
-    Input: the files dated D and D+1. They are dated in UTC+8: the file
-    dated D covers D-1 16:00 -> D 16:00 UTC, so UTC day D needs both.
+    ``paths`` are the files dated D and D+1. They are dated in UTC+8: the file
+    dated D covers D-1 16:00 -> D 16:00 UTC, so UTC day D needs both. The two
+    are joined, de-duplicated on trade id (a repeated id must repeat the
+    whole row) and cropped to ``required_coverage(D)``; ``end_ms`` is lowered
+    to 1 ms past the last trade if no trade in the files lies past the
+    coverage.
 
-    What the parser must deliver:
+    Each trade keeps its own timestamp; rows are sorted by (ts, trade id).
+    Prices become ticks and sizes units of 0.01 contract, exactly, in the
+    BookStream's units. ``aggressor`` is BUY for side "buy" (the taker
+    bought) and SELL for "sell". One row per print: a taker order that
+    matched several makers stays several rows.
 
-      * Rows with ts in ``required_coverage(D)`` only, the two files joined
-        and de-duplicated on trade id; ``start_ms``/``end_ms`` that window,
-        ``end_ms`` lowered if the data ends early. The coverage must be
-        complete outside ``gaps``: the engine reads an interval without rows
-        as one without trades.
-      * Each trade's own timestamp (UTC ms), sorted by (ts, trade id), stably.
-      * Price as int64 ticks with the BookStream's tick size, exact.
-      * Size as int64 in the BookStream's size unit, exact. If the archive
-        gives swap trades in coin rather than contracts, divide by the
-        contract value first and check the result is whole in that unit.
-      * ``aggressor`` = BUY (+1) when the taker bought (side "buy"), SELL
-        (-1) when it sold.
-      * One row per print, as the archive gives them; a taker order that
-        matched several makers is several rows. Do not aggregate: M2
-        compares each print's size with the queue.
-      * Gaps. If trade ids are consecutive (read off the files), a jump in
-        trade id is a gap from the timestamp of the trade before it to that
-        of the trade after it, inclusive: [ts_before, ts_after + 1).
-
-    Before use, check that the trade clock and the book clock agree: the
-    share of trades at the bid or ask whose book decrease follows within a
-    few milliseconds, and the typical lag. The engine puts a millisecond's
-    book rows before its trades (module docstring); a systematic lag of the
-    book behind the trades is a fact to report next to the M2 results.
+    Gaps. Trade ids are consecutive, so a jump in id between two trades of
+    the coverage is a gap from the earlier of their timestamps to 1 ms past
+    the later. ``report``, if given, receives the counts the run reports.
     """
-    raise NotImplementedError("read_trades is written once the archive files are downloaded (pre-registration §12, 2026-10-12)")
+    cfg = _default(config)
+    start, end = required_coverage(day, cfg)
+    frames = []
+    for path in paths:
+        with zipfile.ZipFile(path) as zf:
+            names = [i.filename for i in zf.infolist() if not i.is_dir()]
+            if len(names) != 1:
+                raise ValueError(f"{Path(path).name}: expected one file in the archive, found {len(names)}")
+            raw = zf.read(names[0])
+        # Every column as text, under the file's own names: polars 0.20 renames
+        # the columns by position when given a dtypes mapping of full width.
+        df = pl.read_csv(io.BytesIO(raw), infer_schema_length=0)
+        if df.columns != _TRADE_COLUMNS:
+            raise ValueError(f"{Path(path).name}: columns {df.columns}, expected {_TRADE_COLUMNS}")
+        frames.append(df)
+    df = pl.concat(frames) if frames else pl.DataFrame(schema={c: pl.Utf8 for c in _TRADE_COLUMNS})
+    n_other = int((df["instrument_name"] != inst_id).sum())
+    df = df.filter(pl.col("instrument_name") == inst_id).with_columns(
+        pl.col("trade_id").cast(pl.Int64), pl.col("created_time").cast(pl.Int64))
+    n_rows = df.height
+    distinct = df.unique(maintain_order=True)
+    if distinct["trade_id"].n_unique() != distinct.height:
+        raise ValueError("a trade id repeats with different contents")
+    n_duplicates = n_rows - distinct.height
+    past_end = bool((distinct["created_time"] >= end).any())
+    df = distinct.filter((pl.col("created_time") >= start) & (pl.col("created_time") < end))
+    if df.height == 0:
+        raise ValueError(f"no trade of {inst_id} in [{start}, {end})")
+    bad_side = df.filter(~pl.col("side").is_in(["buy", "sell"]))
+    if bad_side.height:
+        raise ValueError(f"trade {bad_side['trade_id'][0]}: side {bad_side['side'][0]!r}")
+    by_id = df.sort("trade_id")
+    ids = by_id["trade_id"].to_numpy()
+    id_ts = by_id["created_time"].to_numpy()
+    jumps = np.flatnonzero(np.diff(ids) != 1)
+    gaps = merge_gaps([(int(min(id_ts[j], id_ts[j + 1])), int(max(id_ts[j], id_ts[j + 1])) + 1) for j in jumps])
+    df = df.sort(["created_time", "trade_id"])
+    ts = df["created_time"].to_numpy().astype(np.int64)
+    end_ms = end if past_end else int(ts[-1]) + 1
+    gaps = [(lo, min(hi, end_ms)) for lo, hi in gaps if lo < end_ms]
+    if report is not None:
+        report.update(trades=df.height, other_instruments=n_other, duplicate_rows=n_duplicates,
+                      id_jumps=int(jumps.size), ids_out_of_time_order=int(np.sum(np.diff(id_ts) < 0)),
+                      ended_early=not past_end, start_ms=start, end_ms=end_ms)
+    return TradeStream(
+        ts_ms=ts,
+        price=_to_units(df["price"].cast(pl.Float64).to_numpy(), TICK_SIZE, "price"),
+        size=_to_units(df["size"].cast(pl.Float64).to_numpy(), SIZE_UNIT, "size"),
+        aggressor=np.where(df["side"].to_numpy() == "buy", BUY, SELL).astype(np.int64),
+        start_ms=start, end_ms=end_ms, gaps=gaps)
+
+
+# --------------------------------------------------------------------------
+# checks of the parsed day
+# --------------------------------------------------------------------------
+
+@njit(fastmath=False, cache=False)
+def _depth_kernel(b_side, b_idx, b_sz, b_reset, b_msg, n_levels):
+    """Largest number of levels each side holds at the end of any message."""
+    levels = np.zeros((2, n_levels), np.int64)
+    best = np.full(2, -1, np.int64)
+    nlev = np.zeros(2, np.int64)
+    lo = np.full(2, n_levels, np.int64)
+    hi = np.full(2, -1, np.int64)
+    out = np.zeros(2, np.int64)
+    n = b_side.shape[0]
+    for i in range(n):
+        s = b_side[i]
+        if b_reset[i]:
+            _clear_side(levels, best, nlev, lo, hi, s)
+        _apply_level(levels, best, nlev, lo, hi, s, b_idx[i], b_sz[i])
+        if i == n - 1 or b_msg[i + 1] != b_msg[i]:
+            for k in range(2):
+                if nlev[k] > out[k]:
+                    out[k] = nlev[k]
+    return out
+
+
+def max_depth(book: BookStream) -> Tuple[int, int]:
+    """(bid, ask): the most levels a side of the rebuilt book holds after any message."""
+    if not len(book):
+        return 0, 0
+    base, n_levels = _price_base(book)
+    out = _depth_kernel((book.side == ASK).astype(np.int8), book.price - base, book.size, book.reset,
+                        book.msg, n_levels)
+    return int(out[0]), int(out[1])
+
+
+@njit(fastmath=False, cache=False)
+def _old_size_kernel(b_side, b_idx, b_sz, b_reset, n_levels):
+    """For each row, the size its level had just before the row (0 after a reset of its side)."""
+    levels = np.zeros((2, n_levels), np.int64)
+    best = np.full(2, -1, np.int64)
+    nlev = np.zeros(2, np.int64)
+    lo = np.full(2, n_levels, np.int64)
+    hi = np.full(2, -1, np.int64)
+    old = np.zeros(b_side.shape[0], np.int64)
+    for i in range(b_side.shape[0]):
+        s = b_side[i]
+        if b_reset[i]:
+            _clear_side(levels, best, nlev, lo, hi, s)
+        old[i] = _apply_level(levels, best, nlev, lo, hi, s, b_idx[i], b_sz[i])
+    return old
+
+
+def trade_book_lags(book: BookStream, trades: TradeStream, window_ms: int = 100) -> Dict[str, Any]:
+    """
+    How the two clocks and the two size units line up. For each trade, the
+    first decrease of the level at its price, on the side it hit (the bid
+    for a taker sell, the ask for a taker buy), in an update message stamped
+    from the trade's millisecond to ``window_ms`` after it.
+
+    Returns the share of trades with such a decrease, quantiles of its lag
+    (book time minus trade time, ms) and the shares within 10 and 20 ms; the
+    share of trades whose level also decreased in the 10 ms before them (a
+    book clock running ahead would raise it); and, for trades alone at their
+    price and side in their millisecond, the share whose decrease equals the
+    trade's size and the median ratio of the two. A size unit that differed
+    would put that ratio far from 1.
+    """
+    if not len(book) or not len(trades):
+        return {"trades": len(trades), "matched_share": None}
+    base, n_levels = _price_base(book)
+    side_idx = (book.side == ASK).astype(np.int8)
+    old = _old_size_kernel(side_idx, book.price - base, book.size, book.reset, n_levels)
+    snap_msgs = np.unique(book.msg[book.reset])
+    dec = (old > book.size) & ~np.isin(book.msg, snap_msgs)
+    d_ts, d_side = book.ts_ms[dec], side_idx[dec].astype(np.int64)
+    d_px, d_amt = book.price[dec], (old - book.size)[dec]
+    t0 = min(int(book.start_ms), int(trades.start_ms)) - window_ms
+    shift = 31                                          # ms since t0 fit in 31 bits (24 days)
+    key = ((d_side << 24) | d_px) << shift | (d_ts - t0)
+    order = np.argsort(key, kind="stable")
+    key, d_ts, d_amt = key[order], d_ts[order], d_amt[order]
+    t_side = (trades.aggressor == BUY).astype(np.int64)  # a taker buy hits the ask (side index 1)
+    level = ((t_side << 24) | trades.price) << shift
+
+    def first_from(lo_ms: np.ndarray, hi_ms: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        k = np.minimum(np.searchsorted(key, level | (lo_ms - t0), side="left"), key.size - 1)
+        hit = ((key[k] >> shift) == (level >> shift)) & (d_ts[k] >= lo_ms) & (d_ts[k] <= hi_ms)
+        return hit, k
+
+    same, kk = first_from(trades.ts_ms, trades.ts_ms + window_ms)
+    before, _ = first_from(trades.ts_ms - 10, trades.ts_ms - 1)
+    lag = (d_ts[kk] - trades.ts_ms)[same]
+    out: Dict[str, Any] = {"trades": len(trades), "matched_share": float(same.mean()),
+                           "decrease_in_10ms_before_share": float(before.mean())}
+    if lag.size:
+        q = np.quantile(lag, [0.05, 0.25, 0.5, 0.75, 0.95])
+        out.update(lag_ms_q05=float(q[0]), lag_ms_q25=float(q[1]), lag_ms_median=float(q[2]),
+                   lag_ms_q75=float(q[3]), lag_ms_q95=float(q[4]),
+                   lag_within_10ms_share=float(np.mean(lag <= 10)), lag_within_20ms_share=float(np.mean(lag <= 20)))
+    tk = pl.DataFrame({"ts": trades.ts_ms, "side": t_side, "px": trades.price})
+    alone = tk.select(pl.struct(["ts", "side", "px"]).is_unique()).to_series().to_numpy()
+    pick = same & alone
+    if pick.any():
+        amt = d_amt[kk][pick]
+        size = trades.size[pick]
+        out.update(alone_matched=int(pick.sum()), decrease_equals_size_share=float(np.mean(amt == size)),
+                   decrease_over_size_median=float(np.median(amt / size)))
+    return out
