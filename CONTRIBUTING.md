@@ -59,6 +59,21 @@ differs, nothing raises at all and the models silently score the wrong columns.
 `tests/test_model_inference.py::test_feature_contract_matches_training`
 guards it.
 
+## The pre-registered study is frozen
+
+The study's confirmatory code stays as it is at the tag `prereg-freeze`: `research/` (apart from
+`research/maker_probe.py`, which the exploratory maker probe, §11 of the pre-registration, added
+after the last test set had run),
+`scripts/run_oos.py`, `scripts/factor_research.py` (whose statistic the robustness row R2 reports)
+and the engine code they reuse, `quant_core/factor_engine.py`.
+`scripts/verify_results.py` recomputes every committed results file of the five sets
+(`results/insample_v2.csv` and `results/oos/`) and fails its code check if a
+module the study loads differs from the tag, and `tests/test_prereg_spec.py` pins the reused
+factor functions byte for byte. A change there is a deviation from the pre-registration: log it in
+§12 of `docs/preregistration.md` and run it apart from the committed results, which stay primary.
+Adding a factor as described below edits `quant_core/factor_engine.py` too, so do it on a branch,
+not on `main`.
+
 ## Adding a factor
 
 In `quant_core/factor_engine.py`:

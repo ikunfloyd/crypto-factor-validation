@@ -1,5 +1,7 @@
 # Factor validity study — DOGE-USDT-SWAP
 
+> **This is v1, kept because the pre-registration cites it.** The pre-registered out-of-sample study that supersedes it is reported in [`factor-research-v2.md`](factor-research-v2.md); §2 of the [pre-registration](preregistration.md) lists what v1 got wrong.
+
 **Question.** Do the nine factors in this repo predict returns well enough to
 pay for the fees it costs to trade them?
 
